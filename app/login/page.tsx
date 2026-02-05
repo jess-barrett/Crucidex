@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -16,6 +16,26 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    let email = emailOrUsername;
+
+    // Check if input is username (no @ symbol) or email
+    if (!emailOrUsername.includes("@")) {
+      // It's a username, look up the email from profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("username", emailOrUsername)
+        .single();
+
+      if (profileError || !profileData?.email) {
+        setError("Username not found");
+        setLoading(false);
+        return;
+      }
+
+      email = profileData.email;
+    }
 
     const { error: loginError } = await supabase.auth.signInWithPassword({
       email,
@@ -38,10 +58,10 @@ export default function Login() {
         <h1 className="text-2xl font-bold text-center">Log In to Crucidex</h1>
 
         <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="Email or Username"
+          value={emailOrUsername}
+          onChange={(e) => setEmailOrUsername(e.target.value)}
           required
           className="border p-2 rounded"
         />

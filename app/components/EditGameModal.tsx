@@ -1,113 +1,54 @@
 "use client";
 
-import { createClient } from "@/lib/supabase";
 import { useState } from "react";
 
-interface Game {
-  id: number;
-  name: string;
-  summary?: string;
-  cover?: {
-    url: string;
+interface UserGame {
+  id: string;
+  playtime_hours: number;
+  rating: number | null;
+  games: {
+    id: string;
+    title: string;
+    cover_url: string | null;
   };
-  first_release_date?: number;
-  total_rating?: number;
-  genres?: number[];
-  game_modes?: number[];
 }
 
-interface AddGameModalProps {
-  game: Game;
-  userId: string;
+interface EditGameModalProps {
+  game: UserGame;
+  onSave: (hours: number, rating: number | null) => void;
   onClose: () => void;
-  onAdded: () => void;
 }
 
-export default function AddGameModal({
-  game,
-  userId,
-  onClose,
-  onAdded,
-}: AddGameModalProps) {
-  const [playtimeHours, setPlaytimeHours] = useState<string>("");
-  const [rating, setRating] = useState<number | null>(null);
+export default function EditGameModal({ game, onSave, onClose }: EditGameModalProps) {
+  const [playtimeHours, setPlaytimeHours] = useState<string>(
+    game.playtime_hours.toString()
+  );
+  const [rating, setRating] = useState<number | null>(game.rating);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
-
-  function getCoverUrl(): string {
-    if (game.cover?.url) {
-      return `https:${game.cover.url.replace("t_thumb", "t_cover_big")}`;
-    }
-    return "";
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
+    const hours = parseFloat(playtimeHours);
+    if (isNaN(hours) || hours < 0) {
+      setError("Hours must be a positive number");
+      setLoading(false);
+      return;
+    }
+
+    if (rating !== null && (rating < 1 || rating > 10)) {
+      setError("Rating must be between 1 and 10");
+      setLoading(false);
+      return;
+    }
+
     try {
-      // Check if game exists in our database
-      const { data: existingGame } = await supabase
-        .from("games")
-        .select("id")
-        .eq("igdb_id", game.id)
-        .maybeSingle();
-
-      let gameId = existingGame?.id;
-
-      // If not, insert it
-      if (!gameId) {
-        const { data: newGame, error: gameError } = await supabase
-          .from("games")
-          .insert({
-            igdb_id: game.id,
-            title: game.name,
-            summary: game.summary || null,
-            cover_url: getCoverUrl() || null,
-            release_date: game.first_release_date
-              ? new Date(game.first_release_date * 1000)
-                  .toISOString()
-                  .split("T")[0]
-              : null,
-            igdb_rating: game.total_rating || null,
-            genres: game.genres || null,
-            game_modes: game.game_modes || null,
-          })
-          .select("id")
-          .single();
-
-        if (gameError) {
-          setError("Failed to add game");
-          setLoading(false);
-          return;
-        }
-
-        gameId = newGame.id;
-      }
-
-      // Add to user's library
-      const { error: libraryError } = await supabase.from("user_games").insert({
-        user_id: userId,
-        game_id: gameId,
-        playtime_hours: parseFloat(playtimeHours) || 0,
-        rating: rating,
-      });
-
-      if (libraryError) {
-        if (libraryError.code === "23505") {
-          setError("This game is already in your library!");
-        } else {
-          setError("Failed to add to library");
-        }
-        setLoading(false);
-        return;
-      }
-
-      onAdded();
+      await onSave(hours, rating);
     } catch (err) {
-      setError("Something went wrong");
+      setError("Failed to save changes");
       setLoading(false);
     }
   }
@@ -118,9 +59,7 @@ export default function AddGameModal({
         <form onSubmit={handleSubmit}>
           <div className="p-6">
             <div className="flex justify-between items-start mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                Add to Library
-              </h2>
+              <h2 className="text-xl font-bold text-gray-900">Edit Game</h2>
               <button
                 type="button"
                 onClick={onClose}
@@ -131,29 +70,21 @@ export default function AddGameModal({
             </div>
 
             <div className="flex gap-4 mb-6">
-              {getCoverUrl() ? (
+              {game.games?.cover_url ? (
                 <img
-                  src={getCoverUrl()}
-                  alt={game.name}
+                  src={game.games.cover_url}
+                  alt={game.games?.title || "Game"}
                   className="w-24 h-32 object-cover rounded"
                 />
               ) : (
-                <div className="w-24 h-32 bg-gray-200 rounded flex items-center justify-center text-gray-500">
+                <div className="w-24 h-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm">
                   No cover
                 </div>
               )}
               <div>
-                <h3 className="font-semibold text-gray-900">{game.name}</h3>
-                {game.first_release_date && (
-                  <p className="text-sm text-gray-700">
-                    {new Date(game.first_release_date * 1000).getFullYear()}
-                  </p>
-                )}
-                {game.summary && (
-                  <p className="text-sm text-gray-700 mt-2 line-clamp-3">
-                    {game.summary}
-                  </p>
-                )}
+                <h3 className="font-semibold text-gray-900">
+                  {game.games?.title || "Unknown"}
+                </h3>
               </div>
             </div>
 
@@ -170,6 +101,7 @@ export default function AddGameModal({
                   onChange={(e) => setPlaytimeHours(e.target.value)}
                   placeholder="0"
                   className="w-full border rounded p-2 text-gray-900"
+                  required
                 />
               </div>
 
@@ -221,7 +153,7 @@ export default function AddGameModal({
               disabled={loading}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
             >
-              {loading ? "Adding..." : "Add to Library"}
+              {loading ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>

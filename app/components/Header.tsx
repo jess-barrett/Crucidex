@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 
 export default function Header() {
   const [user, setUser] = useState<User | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -14,8 +15,48 @@ export default function Header() {
     async function getUser() {
       const { data } = await supabase.auth.getUser();
       setUser(data.user);
+
+      if (data.user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileData) {
+          setUsername(profileData.username);
+        }
+      } else {
+        setUsername(null);
+      }
     }
+
     getUser();
+
+    // Listen for auth state changes (login, logout, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        supabase
+          .from("profiles")
+          .select("username")
+          .eq("id", session.user.id)
+          .single()
+          .then(({ data: profileData }) => {
+            if (profileData) {
+              setUsername(profileData.username);
+            }
+          });
+      } else {
+        setUsername(null);
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function handleLogout() {
@@ -35,7 +76,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <a href="/profile" className="hover:underline">
+              <a href={username ? `/u/${username}` : "/profile"} className="hover:underline">
                 Profile
               </a>
               <button
