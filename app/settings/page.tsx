@@ -31,7 +31,10 @@ function SettingsContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Form fields
   const [displayName, setDisplayName] = useState("");
@@ -62,7 +65,10 @@ function SettingsContent() {
     const errorParam = searchParams.get("error");
 
     if (steamParam === "linked") {
-      setToast({ message: "Steam account linked successfully!", type: "success" });
+      setToast({
+        message: "Steam account linked successfully!",
+        type: "success",
+      });
       // Clean up URL
       router.replace("/settings");
     } else if (errorParam) {
@@ -74,13 +80,18 @@ function SettingsContent() {
         save_failed: "Failed to save Steam ID",
         not_authenticated: "Please log in first",
       };
-      setToast({ message: errorMessages[errorParam] || "An error occurred", type: "error" });
+      setToast({
+        message: errorMessages[errorParam] || "An error occurred",
+        type: "error",
+      });
       router.replace("/settings");
     }
   }, [searchParams]);
 
   async function loadProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       router.push("/login");
@@ -147,12 +158,15 @@ function SettingsContent() {
       }
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       setAvatarUrl(publicUrl);
-      setToast({ message: "Avatar uploaded! Don't forget to save.", type: "success" });
+      setToast({
+        message: "Avatar uploaded! Don't forget to save.",
+        type: "success",
+      });
     } catch (err: any) {
       console.error("Avatar upload error:", err);
       const errorMessage = err?.message || "Failed to upload avatar";
@@ -185,13 +199,20 @@ function SettingsContent() {
 
         // Validate username format
         if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-          setToast({ message: "Username can only contain letters, numbers, hyphens, and underscores", type: "error" });
+          setToast({
+            message:
+              "Username can only contain letters, numbers, hyphens, and underscores",
+            type: "error",
+          });
           setSaving(false);
           return;
         }
 
         if (username.length < 3 || username.length > 20) {
-          setToast({ message: "Username must be between 3 and 20 characters", type: "error" });
+          setToast({
+            message: "Username must be between 3 and 20 characters",
+            type: "error",
+          });
           setSaving(false);
           return;
         }
@@ -267,11 +288,14 @@ function SettingsContent() {
       setImportResult(data);
       setToast({
         message: `Imported ${data.imported} games, updated ${data.updated}`,
-        type: "success"
+        type: "success",
       });
     } catch (err: any) {
       console.error("Import error:", err);
-      setToast({ message: err.message || "Failed to import Steam library", type: "error" });
+      setToast({
+        message: err.message || "Failed to import Steam library",
+        type: "error",
+      });
     } finally {
       setImporting(false);
     }
@@ -286,7 +310,10 @@ function SettingsContent() {
     }
 
     if (newPassword.length < 6) {
-      setToast({ message: "Password must be at least 6 characters", type: "error" });
+      setToast({
+        message: "Password must be at least 6 characters",
+        type: "error",
+      });
       return;
     }
 
@@ -330,11 +357,16 @@ function SettingsContent() {
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-gray-500">Manage your profile and account settings</p>
+        <p className="text-gray-500">
+          Manage your profile and account settings
+        </p>
       </div>
 
       {/* Profile Information */}
-      <form onSubmit={handleSaveProfile} className="bg-white rounded-lg border p-6 mb-6">
+      <form
+        onSubmit={handleSaveProfile}
+        className="bg-white rounded-lg border p-6 mb-6"
+      >
         <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
 
         {/* Avatar Upload */}
@@ -515,8 +547,12 @@ function SettingsContent() {
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gray-800 rounded flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387l3.063-4.41c-.104-.01-.207-.023-.312-.039l-2.182-3.146a2.794 2.794 0 01-.312-2.12 2.794 2.794 0 011.293-1.74 2.794 2.794 0 012.12-.312c.74.18 1.373.66 1.74 1.293l3.146 2.182c.016.105.029.208.039.312l4.41-3.063C23.197 5.438 18.699 2 12 0zm0 4.5a7.5 7.5 0 110 15 7.5 7.5 0 010-15z"/>
+                <svg
+                  className="w-6 h-6 text-white"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387l3.063-4.41c-.104-.01-.207-.023-.312-.039l-2.182-3.146a2.794 2.794 0 01-.312-2.12 2.794 2.794 0 011.293-1.74 2.794 2.794 0 012.12-.312c.74.18 1.373.66 1.74 1.293l3.146 2.182c.016.105.029.208.039.312l4.41-3.063C23.197 5.438 18.699 2 12 0zm0 4.5a7.5 7.5 0 110 15 7.5 7.5 0 010-15z" />
                 </svg>
               </div>
               <div>
@@ -546,25 +582,37 @@ function SettingsContent() {
                 <p className="font-medium mb-2">Import Results</p>
                 <ul className="space-y-1 text-gray-600">
                   <li>Total Steam games: {importResult.totalSteamGames}</li>
-                  <li>Games with 30+ min played: {importResult.eligibleGames}</li>
-                  <li className="text-green-600">Imported: {importResult.imported}</li>
-                  <li className="text-blue-600">Updated: {importResult.updated}</li>
-                  <li className="text-gray-500">Skipped (no changes): {importResult.skipped}</li>
+                  <li>
+                    Games with 30+ min played: {importResult.eligibleGames}
+                  </li>
+                  <li className="text-green-600">
+                    Imported: {importResult.imported}
+                  </li>
+                  <li className="text-blue-600">
+                    Updated: {importResult.updated}
+                  </li>
+                  <li className="text-gray-500">
+                    Skipped (no changes): {importResult.skipped}
+                  </li>
                   {importResult.failed > 0 && (
-                    <li className="text-red-600">Failed: {importResult.failed}</li>
+                    <li className="text-red-600">
+                      Failed: {importResult.failed}
+                    </li>
                   )}
                 </ul>
               </div>
             )}
 
             <p className="text-xs text-gray-500 mt-4">
-              Games with at least 30 minutes played will be imported. Your Steam profile must be public.
+              Games with at least 30 minutes played will be imported. Your Steam
+              profile must be public.
             </p>
           </div>
         ) : (
           <div>
             <p className="text-gray-600 mb-4">
-              Link your Steam account to automatically import your game library and playtime.
+              Link your Steam account to automatically import your game library
+              and playtime.
             </p>
             <a
               href="/api/steam/login"
@@ -584,10 +632,7 @@ function SettingsContent() {
         >
           ← Back to profile
         </a>
-        <a
-          href="/"
-          className="text-blue-500 hover:underline"
-        >
+        <a href="/" className="text-blue-500 hover:underline">
           Home
         </a>
       </div>
@@ -605,11 +650,13 @@ function SettingsContent() {
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={
-      <main className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
-      </main>
-    }>
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center">
+          <p>Loading...</p>
+        </main>
+      }
+    >
       <SettingsContent />
     </Suspense>
   );

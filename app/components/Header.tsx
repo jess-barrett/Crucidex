@@ -34,7 +34,9 @@ export default function Header() {
     getUser();
 
     // Listen for auth state changes (login, logout, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
 
       if (session?.user) {
@@ -76,7 +78,10 @@ export default function Header() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <a href={username ? `/u/${username}` : "/profile"} className="hover:underline">
+              <a
+                href={username ? `/u/${username}` : "/profile"}
+                className="hover:underline"
+              >
                 Profile
               </a>
               <button

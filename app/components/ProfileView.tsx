@@ -50,7 +50,11 @@ interface ProfileViewProps {
   availableGenres?: Genre[];
   onSelectTopFour: (gameId: string, position: number) => Promise<void>;
   onRemoveTopFour: (gameId: string) => Promise<void>;
-  onEditGame: (gameId: string, hours: number, rating: number | null) => Promise<void>;
+  onEditGame: (
+    gameId: string,
+    hours: number,
+    rating: number | null,
+  ) => Promise<void>;
   onDeleteGame: (gameId: string) => Promise<void>;
 }
 
@@ -64,10 +68,15 @@ export default function ProfileView({
   onEditGame,
   onDeleteGame,
 }: ProfileViewProps) {
-  const [selectingPosition, setSelectingPosition] = useState<number | null>(null);
+  const [selectingPosition, setSelectingPosition] = useState<number | null>(
+    null,
+  );
   const [editingGame, setEditingGame] = useState<UserGame | null>(null);
   const [deletingGame, setDeletingGame] = useState<UserGame | null>(null);
-  const [toast, setToast] = useState<{message: string; type: 'success'|'error'} | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Sorting and filtering state
   const [sortOption, setSortOption] = useState<SortOption>("title-asc");
@@ -127,7 +136,10 @@ export default function ProfileView({
       if (modeFilter !== "all") {
         const modes = item.games?.game_modes || [];
         if (modeFilter === "single" && !modes.includes(1)) return false;
-        if (modeFilter === "multi" && !modes.some((m) => [2, 3, 4, 5].includes(m)))
+        if (
+          modeFilter === "multi" &&
+          !modes.some((m) => [2, 3, 4, 5].includes(m))
+        )
           return false;
       }
 
@@ -162,7 +174,10 @@ export default function ProfileView({
           if (!a.last_played_at && !b.last_played_at) return 0;
           if (!a.last_played_at) return 1;
           if (!b.last_played_at) return -1;
-          return new Date(b.last_played_at).getTime() - new Date(a.last_played_at).getTime();
+          return (
+            new Date(b.last_played_at).getTime() -
+            new Date(a.last_played_at).getTime()
+          );
         default:
           return 0;
       }
@@ -173,36 +188,42 @@ export default function ProfileView({
     .filter((g) => g.top_four_position !== null)
     .sort((a, b) => (a.top_four_position || 0) - (b.top_four_position || 0));
 
-  const filledPositions = topFour.map(g => g.top_four_position);
-  const leftmostEmpty = [1, 2, 3, 4].find(pos => !filledPositions.includes(pos));
+  const filledPositions = topFour.map((g) => g.top_four_position);
+  const leftmostEmpty = [1, 2, 3, 4].find(
+    (pos) => !filledPositions.includes(pos),
+  );
 
   async function handleSelect(gameId: string) {
     if (!selectingPosition) return;
     try {
       await onSelectTopFour(gameId, selectingPosition);
       setSelectingPosition(null);
-      setToast({ message: 'Added to Top 4!', type: 'success' });
+      setToast({ message: "Added to Top 4!", type: "success" });
     } catch (err) {
-      setToast({ message: 'Failed to update', type: 'error' });
+      setToast({ message: "Failed to update", type: "error" });
     }
   }
 
   async function handleRemove(gameId: string) {
     try {
       await onRemoveTopFour(gameId);
-      setToast({ message: 'Removed from Top 4', type: 'success' });
+      setToast({ message: "Removed from Top 4", type: "success" });
     } catch (err) {
-      setToast({ message: 'Failed to remove', type: 'error' });
+      setToast({ message: "Failed to remove", type: "error" });
     }
   }
 
-  async function handleEditSave(gameId: string, hours: number, rating: number | null) {
+  async function handleEditSave(
+    gameId: string,
+    hours: number,
+    rating: number | null,
+  ) {
     try {
       await onEditGame(gameId, hours, rating);
       setEditingGame(null);
-      setToast({ message: 'Game updated!', type: 'success' });
+      setToast({ message: "Game updated!", type: "success" });
     } catch (err) {
-      setToast({ message: 'Failed to update', type: 'error' });
+      setToast({ message: "Failed to update", type: "error" });
       throw err;
     }
   }
@@ -211,9 +232,9 @@ export default function ProfileView({
     try {
       await onDeleteGame(gameId);
       setDeletingGame(null);
-      setToast({ message: 'Game deleted', type: 'success' });
+      setToast({ message: "Game deleted", type: "success" });
     } catch (err) {
-      setToast({ message: 'Failed to delete', type: 'error' });
+      setToast({ message: "Failed to delete", type: "error" });
       throw err;
     }
   }
@@ -289,7 +310,9 @@ export default function ProfileView({
                     className="w-full h-full flex items-center justify-center hover:bg-[#0047AB] transition-colors group/slot"
                     title="Add to Top 4"
                   >
-                    <span className="text-3xl text-gray-400 group-hover/slot:text-white transition-colors">+</span>
+                    <span className="text-3xl text-gray-400 group-hover/slot:text-white transition-colors">
+                      +
+                    </span>
                   </button>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -306,10 +329,15 @@ export default function ProfileView({
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-semibold">
             Library ({displayedLibrary.length}
-            {displayedLibrary.length !== library.length && ` of ${library.length}`})
+            {displayedLibrary.length !== library.length &&
+              ` of ${library.length}`}
+            )
           </h2>
           {isOwnProfile && (
-            <a href="/add-game" className="text-blue-500 hover:underline text-sm">
+            <a
+              href="/add-game"
+              className="text-blue-500 hover:underline text-sm"
+            >
               + Add games
             </a>
           )}
@@ -334,9 +362,7 @@ export default function ProfileView({
             {isOwnProfile ? "Your library is empty." : "No games in library."}
           </p>
         ) : displayedLibrary.length === 0 ? (
-          <p className="text-gray-500 text-sm">
-            No games match your filters.
-          </p>
+          <p className="text-gray-500 text-sm">No games match your filters.</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {displayedLibrary.map((item) => (
@@ -397,7 +423,7 @@ export default function ProfileView({
         <SelectGameModal
           position={selectingPosition}
           library={library}
-          excludeIds={topFour.map(g => g.games?.id || '')}
+          excludeIds={topFour.map((g) => g.games?.id || "")}
           onSelect={handleSelect}
           onClose={() => setSelectingPosition(null)}
         />
@@ -406,14 +432,16 @@ export default function ProfileView({
       {isOwnProfile && editingGame && (
         <EditGameModal
           game={editingGame}
-          onSave={(hours, rating) => handleEditSave(editingGame.id, hours, rating)}
+          onSave={(hours, rating) =>
+            handleEditSave(editingGame.id, hours, rating)
+          }
           onClose={() => setEditingGame(null)}
         />
       )}
 
       {isOwnProfile && deletingGame && (
         <ConfirmDeleteModal
-          gameName={deletingGame.games?.title || 'this game'}
+          gameName={deletingGame.games?.title || "this game"}
           onConfirm={() => handleDeleteConfirm(deletingGame.id)}
           onCancel={() => setDeletingGame(null)}
         />
