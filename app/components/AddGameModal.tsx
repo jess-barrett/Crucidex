@@ -1,7 +1,8 @@
 "use client";
 
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-client";
 import { useState } from "react";
+import type { PlayStatus } from "@/lib/types";
 
 interface Game {
   id: number;
@@ -23,14 +24,27 @@ interface AddGameModalProps {
   onAdded: () => void;
 }
 
+const PLAY_STATUS_OPTIONS: { value: PlayStatus; label: string; description: string }[] = [
+  { value: "playing", label: "Playing", description: "Currently playing" },
+  { value: "completed", label: "Completed", description: "Accomplished main objective" },
+  { value: "played", label: "Played", description: "Played (not specific)" },
+  { value: "backlog", label: "Backlog", description: "Own it but haven't started" },
+  { value: "wishlist", label: "Wishlist", description: "Want to play (don't own yet)" },
+  { value: "shelved", label: "Shelved", description: "Unfinished but could play again" },
+  { value: "retired", label: "Retired", description: "No longer playing (no ending)" },
+  { value: "abandoned", label: "Abandoned", description: "Unfinished and not picking back up" },
+];
+
 export default function AddGameModal({
   game,
   userId,
   onClose,
   onAdded,
 }: AddGameModalProps) {
+  const [playStatus, setPlayStatus] = useState<PlayStatus>("played");
   const [playtimeHours, setPlaytimeHours] = useState<string>("");
   const [rating, setRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -93,6 +107,7 @@ export default function AddGameModal({
         game_id: gameId,
         playtime_hours: parseFloat(playtimeHours) || 0,
         rating: rating,
+        play_status: playStatus,
       });
 
       if (libraryError) {
@@ -114,17 +129,17 @@ export default function AddGameModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-gray-900 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <div className="p-6">
             <div className="flex justify-between items-start mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                Add to Library
+              <h2 className="text-2xl font-bold text-white">
+                Add to Collection
               </h2>
               <button
                 type="button"
                 onClick={onClose}
-                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+                className="text-gray-400 hover:text-white text-3xl leading-none"
               >
                 ×
               </button>
@@ -138,19 +153,19 @@ export default function AddGameModal({
                   className="w-24 h-32 object-cover rounded"
                 />
               ) : (
-                <div className="w-24 h-32 bg-gray-200 rounded flex items-center justify-center text-gray-500">
-                  No cover
+                <div className="w-24 h-32 bg-gray-700 rounded flex items-center justify-center">
+                  <i className="fa-solid fa-gamepad text-gray-500 text-2xl"></i>
                 </div>
               )}
-              <div>
-                <h3 className="font-semibold text-gray-900">{game.name}</h3>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-white text-lg">{game.name}</h3>
                 {game.first_release_date && (
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-400 mt-1">
                     {new Date(game.first_release_date * 1000).getFullYear()}
                   </p>
                 )}
                 {game.summary && (
-                  <p className="text-sm text-gray-700 mt-2 line-clamp-3">
+                  <p className="text-sm text-gray-400 mt-2 line-clamp-2">
                     {game.summary}
                   </p>
                 )}
@@ -158,9 +173,28 @@ export default function AddGameModal({
             </div>
 
             <div className="space-y-4">
+              {/* Play Status Dropdown */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Hours Played
+                <label className="block text-sm font-medium text-white mb-2">
+                  Play Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={playStatus}
+                  onChange={(e) => setPlayStatus(e.target.value as PlayStatus)}
+                  className="w-full bg-gray-800 border border-gray-600 text-white rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#b8253d] transition-colors"
+                >
+                  {PLAY_STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label} - {option.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Hours Played */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Hours Played {playStatus === "wishlist" || playStatus === "backlog" ? "(optional)" : ""}
                 </label>
                 <input
                   type="number"
@@ -169,59 +203,105 @@ export default function AddGameModal({
                   value={playtimeHours}
                   onChange={(e) => setPlaytimeHours(e.target.value)}
                   placeholder="0"
-                  className="w-full border rounded p-2 text-gray-900"
+                  className="w-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#b8253d] transition-colors"
                 />
               </div>
 
+              {/* Rating */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Rating {rating ? `(${rating}/10)` : "(optional)"}
+                <label className="block text-sm font-medium text-white mb-2">
+                  Your Rating {rating ? `(${rating}★)` : "(optional)"}
                 </label>
-                <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    step="0.5"
-                    value={rating ?? 5}
-                    onChange={(e) => setRating(parseFloat(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-gray-900 w-10 text-center">
-                      {rating ?? "—"}
-                    </span>
-                    {rating && (
-                      <button
-                        type="button"
-                        onClick={() => setRating(null)}
-                        className="text-gray-400 hover:text-gray-600 text-sm"
-                      >
-                        Clear
-                      </button>
-                    )}
+                <div className="flex items-center gap-3">
+                  {/* Star Rating */}
+                  <div
+                    className="flex items-center gap-1"
+                    onMouseLeave={() => setHoverRating(null)}
+                  >
+                    {[1, 2, 3, 4, 5].map((starIndex) => {
+                      const fullValue = starIndex;
+                      const halfValue = starIndex - 0.5;
+                      const displayRating = hoverRating ?? rating;
+
+                      return (
+                        <div key={starIndex} className="relative inline-block">
+                          {/* Container for the star */}
+                          <div className="relative w-7 h-7">
+                            {/* Left half clickable area */}
+                            <button
+                              type="button"
+                              onClick={() => setRating(halfValue)}
+                              onMouseEnter={() => setHoverRating(halfValue)}
+                              className="absolute left-0 top-0 w-1/2 h-full z-10"
+                              aria-label={`${halfValue} stars`}
+                            />
+                            {/* Right half clickable area */}
+                            <button
+                              type="button"
+                              onClick={() => setRating(fullValue)}
+                              onMouseEnter={() => setHoverRating(fullValue)}
+                              className="absolute right-0 top-0 w-1/2 h-full z-10"
+                              aria-label={`${fullValue} stars`}
+                            />
+                            {/* Visual star */}
+                            <i
+                              className={`fa-star absolute inset-0 text-2xl pointer-events-none transition-colors ${
+                                displayRating && displayRating >= fullValue
+                                  ? "fa-solid text-[#b8253d]"
+                                  : displayRating && displayRating >= halfValue
+                                  ? "fa-solid text-[#b8253d] half-star"
+                                  : "fa-regular text-gray-600"
+                              }`}
+                              style={{
+                                background: displayRating && displayRating >= halfValue && displayRating < fullValue
+                                  ? 'linear-gradient(90deg, #b8253d 50%, #4b5563 50%)'
+                                  : undefined,
+                                WebkitBackgroundClip: displayRating && displayRating >= halfValue && displayRating < fullValue
+                                  ? 'text'
+                                  : undefined,
+                                WebkitTextFillColor: displayRating && displayRating >= halfValue && displayRating < fullValue
+                                  ? 'transparent'
+                                  : undefined,
+                                backgroundClip: displayRating && displayRating >= halfValue && displayRating < fullValue
+                                  ? 'text'
+                                  : undefined,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                  {rating && (
+                    <button
+                      type="button"
+                      onClick={() => setRating(null)}
+                      className="text-gray-400 hover:text-white text-sm transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
 
-            {error && <p className="text-red-600 text-sm mt-4">{error}</p>}
+            {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
           </div>
 
-          <div className="border-t px-6 py-4 flex justify-end gap-2">
+          <div className="border-t border-gray-700 px-6 py-4 flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded text-gray-700 hover:bg-gray-100"
+              className="px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+              className="bg-[#b8253d] text-white px-4 py-2 rounded-lg hover:bg-[#8a1c2e] disabled:opacity-50 transition-colors"
             >
-              {loading ? "Adding..." : "Add to Library"}
+              {loading ? "Adding..." : "Add to Collection"}
             </button>
           </div>
         </form>

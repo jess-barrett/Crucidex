@@ -3,14 +3,19 @@
 import { useState, useMemo } from "react";
 import SelectGameModal from "./SelectGameModal";
 import Toast from "./Toast";
-import GameCardMenu from "./GameCardMenu";
 import EditGameModal from "./EditGameModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import SearchGameModal from "./SearchGameModal";
+import AddGameModal from "./AddGameModal";
 import LibraryControls, {
   SortOption,
   HoursFilter,
   ModeFilter,
+  PlayStatusFilter,
 } from "./LibraryControls";
+import ProfileSidebar from "./ProfileSidebar";
+import StatsBar from "./StatsBar";
+import GameCard from "./GameCard";
 
 interface Profile {
   id: string;
@@ -26,10 +31,12 @@ interface UserGame {
   playtime_hours: number;
   rating: number | null;
   top_four_position: number | null;
+  play_status: string | null;
   added_at?: string;
   last_played_at?: string;
   games: {
     id: string;
+    igdb_id: number;
     title: string;
     cover_url: string | null;
     igdb_rating: number | null;
@@ -53,7 +60,7 @@ interface ProfileViewProps {
   onEditGame: (
     gameId: string,
     hours: number,
-    rating: number | null,
+    rating: number | null
   ) => Promise<void>;
   onDeleteGame: (gameId: string) => Promise<void>;
 }
@@ -69,20 +76,23 @@ export default function ProfileView({
   onDeleteGame,
 }: ProfileViewProps) {
   const [selectingPosition, setSelectingPosition] = useState<number | null>(
-    null,
+    null
   );
   const [editingGame, setEditingGame] = useState<UserGame | null>(null);
   const [deletingGame, setDeletingGame] = useState<UserGame | null>(null);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<any>(null);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
   } | null>(null);
 
   // Sorting and filtering state
-  const [sortOption, setSortOption] = useState<SortOption>("title-asc");
+  const [sortOption, setSortOption] = useState<SortOption>("hours-desc");
   const [hoursFilter, setHoursFilter] = useState<HoursFilter>("all");
   const [genreFilter, setGenreFilter] = useState<number | null>(null);
   const [modeFilter, setModeFilter] = useState<ModeFilter>("all");
+  const [playStatusFilter, setPlayStatusFilter] = useState<PlayStatusFilter>("all");
 
   // Compute genres that exist in user's library
   const genresInLibrary = useMemo(() => {
@@ -90,18 +100,7 @@ export default function ProfileView({
     library.forEach((item) => {
       (item.games?.genres || []).forEach((id) => genreIds.add(id));
     });
-    const result = availableGenres.filter((g) => genreIds.has(g.id));
-
-    // Debug logging - remove after fixing
-    console.log("DEBUG genres:", {
-      availableGenresCount: availableGenres.length,
-      libraryCount: library.length,
-      genreIdsInLibrary: Array.from(genreIds),
-      genresInLibraryCount: result.length,
-      sampleGame: library[0]?.games,
-    });
-
-    return result;
+    return availableGenres.filter((g) => genreIds.has(g.id));
   }, [library, availableGenres]);
 
   // Filter library
@@ -143,9 +142,14 @@ export default function ProfileView({
           return false;
       }
 
+      // Play status filter
+      if (playStatusFilter !== "all") {
+        if (item.play_status !== playStatusFilter) return false;
+      }
+
       return true;
     });
-  }, [library, hoursFilter, genreFilter, modeFilter]);
+  }, [library, hoursFilter, genreFilter, modeFilter, playStatusFilter]);
 
   // Sort library
   const displayedLibrary = useMemo(() => {
@@ -160,7 +164,6 @@ export default function ProfileView({
         case "hours-asc":
           return a.playtime_hours - b.playtime_hours;
         case "rating-desc":
-          // Unrated games go to bottom
           if (a.rating === null && b.rating === null) return 0;
           if (a.rating === null) return 1;
           if (b.rating === null) return -1;
@@ -170,7 +173,6 @@ export default function ProfileView({
           const bRating = b.games?.igdb_rating ?? 0;
           return bRating - aRating;
         case "recent":
-          // Sort by last_played_at descending (from Steam)
           if (!a.last_played_at && !b.last_played_at) return 0;
           if (!a.last_played_at) return 1;
           if (!b.last_played_at) return -1;
@@ -187,11 +189,6 @@ export default function ProfileView({
   const topFour = library
     .filter((g) => g.top_four_position !== null)
     .sort((a, b) => (a.top_four_position || 0) - (b.top_four_position || 0));
-
-  const filledPositions = topFour.map((g) => g.top_four_position);
-  const leftmostEmpty = [1, 2, 3, 4].find(
-    (pos) => !filledPositions.includes(pos),
-  );
 
   async function handleSelect(gameId: string) {
     if (!selectingPosition) return;
@@ -216,7 +213,7 @@ export default function ProfileView({
   async function handleEditSave(
     gameId: string,
     hours: number,
-    rating: number | null,
+    rating: number | null
   ) {
     try {
       await onEditGame(gameId, hours, rating);
@@ -239,186 +236,107 @@ export default function ProfileView({
     }
   }
 
+  function handleSelectGameFromSearch(game: any) {
+    setShowSearchModal(false);
+    setSelectedGame(game);
+  }
+
+  function handleGameAdded() {
+    setSelectedGame(null);
+    setToast({ message: "Game added to your library!", type: "success" });
+    window.location.reload(); // Refresh to update library
+  }
+
   return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-2xl">
-            {profile.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt={profile.display_name}
-                className="w-full h-full rounded-full object-cover"
-              />
-            ) : (
-              profile.display_name.charAt(0).toUpperCase()
-            )}
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">{profile.display_name}</h1>
-            <p className="text-gray-500">@{profile.username}</p>
-          </div>
-        </div>
-        {isOwnProfile && (
-          <a
-            href="/settings"
-            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 text-sm font-medium"
-          >
-            Edit Profile
-          </a>
-        )}
-      </div>
+    <main className="h-screen overflow-hidden">
+      <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+        <div className="h-full lg:flex lg:gap-6">
+          {/* Sidebar - fixed */}
+          <aside className="lg:w-1/3 flex-shrink-0">
+            <ProfileSidebar
+              profile={profile}
+              topFour={topFour}
+              isOwnProfile={isOwnProfile}
+              onSelectTopFour={(position) => setSelectingPosition(position)}
+              onRemoveTopFour={handleRemove}
+            />
+          </aside>
 
-      {profile.bio && <p className="mb-6">{profile.bio}</p>}
+          {/* Main content - flex column */}
+          <div className="lg:w-2/3 mt-6 lg:mt-0 flex flex-col h-full lg:min-h-0">
+            {/* Stats Bar - fixed */}
+            <div className="flex-shrink-0">
+              <StatsBar library={library} availableGenres={availableGenres} />
+            </div>
 
-      <p className="text-sm text-gray-400 mb-8">
-        Joined {new Date(profile.created_at).toLocaleDateString()}
-      </p>
-
-      <div className="mb-8">
-        <h2 className="font-semibold mb-4">Top 4 Games</h2>
-        <div className="grid grid-cols-4 gap-2">
-          {[1, 2, 3, 4].map((position) => {
-            const game = topFour.find((g) => g.top_four_position === position);
-            const isLeftmostEmpty = !game && position === leftmostEmpty;
-
-            return (
-              <div
-                key={position}
-                className="aspect-[3/4] border-2 border-dashed border-gray-300 rounded bg-gray-50 relative group"
-              >
-                {game ? (
-                  <>
-                    <img
-                      src={game.games?.cover_url || ""}
-                      alt={game.games?.title || "Game"}
-                      className="w-full h-full object-cover rounded"
-                    />
-                    {isOwnProfile && (
-                      <button
-                        onClick={() => handleRemove(game.id)}
-                        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-all"
-                        title="Remove from Top 4"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </>
-                ) : isLeftmostEmpty && isOwnProfile ? (
+            {/* Library Header and Controls - fixed */}
+            <div className="flex-shrink-0 mt-4">
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                  <i className="fa-solid fa-gamepad text-[#b8253d]"></i>
+                  Library ({displayedLibrary.length}
+                  {displayedLibrary.length !== library.length &&
+                    ` of ${library.length}`}
+                  )
+                </h2>
+                {isOwnProfile && (
                   <button
-                    onClick={() => setSelectingPosition(position)}
-                    className="w-full h-full flex items-center justify-center hover:bg-[#0047AB] transition-colors group/slot"
-                    title="Add to Top 4"
+                    onClick={() => setShowSearchModal(true)}
+                    className="text-[#b8253d] hover:text-[#8a1c2e] text-sm font-medium transition-colors"
                   >
-                    <span className="text-3xl text-gray-400 group-hover/slot:text-white transition-colors">
-                      +
-                    </span>
+                    + Add games
                   </button>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-3xl text-gray-300">+</span>
-                  </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold">
-            Library ({displayedLibrary.length}
-            {displayedLibrary.length !== library.length &&
-              ` of ${library.length}`}
-            )
-          </h2>
-          {isOwnProfile && (
-            <a
-              href="/add-game"
-              className="text-blue-500 hover:underline text-sm"
-            >
-              + Add games
-            </a>
-          )}
-        </div>
+              {library.length > 0 && (
+                <LibraryControls
+                  sortOption={sortOption}
+                  onSortChange={setSortOption}
+                  hoursFilter={hoursFilter}
+                  onHoursFilterChange={setHoursFilter}
+                  genreFilter={genreFilter}
+                  onGenreFilterChange={setGenreFilter}
+                  modeFilter={modeFilter}
+                  onModeFilterChange={setModeFilter}
+                  playStatusFilter={playStatusFilter}
+                  onPlayStatusFilterChange={setPlayStatusFilter}
+                  availableGenres={genresInLibrary}
+                />
+              )}
+            </div>
 
-        {library.length > 0 && (
-          <LibraryControls
-            sortOption={sortOption}
-            onSortChange={setSortOption}
-            hoursFilter={hoursFilter}
-            onHoursFilterChange={setHoursFilter}
-            genreFilter={genreFilter}
-            onGenreFilterChange={setGenreFilter}
-            modeFilter={modeFilter}
-            onModeFilterChange={setModeFilter}
-            availableGenres={genresInLibrary}
-          />
-        )}
-
-        {library.length === 0 ? (
-          <p className="text-gray-500 text-sm">
-            {isOwnProfile ? "Your library is empty." : "No games in library."}
-          </p>
-        ) : displayedLibrary.length === 0 ? (
-          <p className="text-gray-500 text-sm">No games match your filters.</p>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {displayedLibrary.map((item) => (
-              <div
-                key={item.id}
-                className="border rounded-lg overflow-hidden bg-gray-900 relative"
-              >
-                {isOwnProfile && (
-                  <div className="absolute top-2 right-2 z-10">
-                    <GameCardMenu
+            {/* Library Grid - scrollable */}
+            <div className="flex-1 overflow-y-auto mt-4 min-h-0 custom-scrollbar pr-2">
+              {library.length === 0 ? (
+                <p className="text-gray-500 text-sm">
+                  {isOwnProfile
+                    ? "Your library is empty."
+                    : "No games in library."}
+                </p>
+              ) : displayedLibrary.length === 0 ? (
+                <p className="text-gray-500 text-sm">
+                  No games match your filters.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+                  {displayedLibrary.map((item) => (
+                    <GameCard
+                      key={item.id}
+                      item={item}
+                      isOwnProfile={isOwnProfile}
                       onEdit={() => setEditingGame(item)}
                       onDelete={() => setDeletingGame(item)}
                     />
-                  </div>
-                )}
-
-                <div className="aspect-[3/4]">
-                  {item.games?.cover_url ? (
-                    <img
-                      src={item.games.cover_url}
-                      alt={item.games?.title || "Game"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-700 flex items-center justify-center p-2 text-sm text-center text-white">
-                      {item.games?.title || "Unknown"}
-                    </div>
-                  )}
+                  ))}
                 </div>
-                <div className="p-3">
-                  <h3 className="font-medium text-white truncate">
-                    {item.games?.title || "Unknown"}
-                  </h3>
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="text-white">
-                      {item.playtime_hours} hrs
-                    </span>
-                    {item.rating ? (
-                      <span className="bg-[#0047AB] text-white px-2 py-0.5 rounded font-medium">
-                        {item.rating}/10
-                      </span>
-                    ) : (
-                      <span className="text-gray-400">No rating</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
-      <a href="/" className="inline-block mt-8 text-blue-500 hover:underline">
-        ← Back home
-      </a>
-
+      {/* Modals */}
       {isOwnProfile && selectingPosition && (
         <SelectGameModal
           position={selectingPosition}
@@ -444,6 +362,22 @@ export default function ProfileView({
           gameName={deletingGame.games?.title || "this game"}
           onConfirm={() => handleDeleteConfirm(deletingGame.id)}
           onCancel={() => setDeletingGame(null)}
+        />
+      )}
+
+      {isOwnProfile && showSearchModal && (
+        <SearchGameModal
+          onClose={() => setShowSearchModal(false)}
+          onSelectGame={handleSelectGameFromSearch}
+        />
+      )}
+
+      {isOwnProfile && selectedGame && (
+        <AddGameModal
+          game={selectedGame}
+          userId={profile.id}
+          onClose={() => setSelectedGame(null)}
+          onAdded={handleGameAdded}
         />
       )}
 

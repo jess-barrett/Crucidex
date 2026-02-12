@@ -27,10 +27,10 @@ export default function SelectGameModal({
   onSelect,
   onClose,
 }: SelectGameModalProps) {
-  // Filter out games already in Top 4
-  const availableGames = library.filter(
-    (game) => !excludeIds.includes(game.games?.id || "")
-  );
+  // Filter out games already in Top 4, sorted by hours played
+  const availableGames = library
+    .filter((game) => !excludeIds.includes(game.games?.id || ""))
+    .sort((a, b) => b.playtime_hours - a.playtime_hours);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -60,7 +60,7 @@ export default function SelectGameModal({
                 <button
                   key={item.id}
                   onClick={() => onSelect(item.id)}
-                  className="border rounded-lg overflow-hidden bg-gray-900 hover:ring-2 hover:ring-blue-500 transition-all text-left"
+                  className="border rounded-lg overflow-hidden bg-gray-900 hover:ring-2 hover:ring-[#b8253d] transition-all text-left"
                 >
                   <div className="aspect-[3/4]">
                     {item.games?.cover_url ? (
@@ -80,12 +80,12 @@ export default function SelectGameModal({
                       {item.games?.title || "Unknown"}
                     </h3>
                     <div className="mt-2 flex items-center justify-between text-sm">
-                      <span className="text-white">
+                      <span className="text-gray-300">
                         {item.playtime_hours} hrs
                       </span>
                       {item.rating && (
-                        <span className="bg-[#0047AB] text-white px-2 py-0.5 rounded font-medium">
-                          {item.rating}/10
+                        <span className="bg-[#b8253d] text-white px-2 py-0.5 rounded font-medium">
+                          {item.rating}★
                         </span>
                       )}
                     </div>

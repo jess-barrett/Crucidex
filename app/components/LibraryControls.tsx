@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { PlayStatus } from "@/lib/types";
 
 export type SortOption =
   | "title-asc"
@@ -13,6 +14,7 @@ export type SortOption =
 
 export type HoursFilter = "all" | "0-10" | "10-50" | "50-100" | "100+";
 export type ModeFilter = "all" | "single" | "multi";
+export type PlayStatusFilter = "all" | PlayStatus;
 
 interface Genre {
   id: number;
@@ -28,6 +30,8 @@ interface LibraryControlsProps {
   onGenreFilterChange: (genreId: number | null) => void;
   modeFilter: ModeFilter;
   onModeFilterChange: (filter: ModeFilter) => void;
+  playStatusFilter: PlayStatusFilter;
+  onPlayStatusFilterChange: (filter: PlayStatusFilter) => void;
   availableGenres: Genre[];
 }
 
@@ -40,16 +44,22 @@ export default function LibraryControls({
   onGenreFilterChange,
   modeFilter,
   onModeFilterChange,
+  playStatusFilter,
+  onPlayStatusFilterChange,
   availableGenres,
 }: LibraryControlsProps) {
   const [showFilters, setShowFilters] = useState(false);
 
   const hasActiveFilters =
-    hoursFilter !== "all" || genreFilter !== null || modeFilter !== "all";
+    hoursFilter !== "all" ||
+    genreFilter !== null ||
+    modeFilter !== "all" ||
+    playStatusFilter !== "all";
   const activeFilterCount = [
     hoursFilter !== "all",
     genreFilter !== null,
     modeFilter !== "all",
+    playStatusFilter !== "all",
   ].filter(Boolean).length;
 
   return (
@@ -74,13 +84,13 @@ export default function LibraryControls({
           onClick={() => setShowFilters(!showFilters)}
           className={`px-3 py-2 border rounded text-sm flex items-center gap-2 transition-colors ${
             hasActiveFilters
-              ? "bg-blue-900 border-blue-500 text-blue-200"
+              ? "bg-[#b8253d]/20 border-[#b8253d] text-white"
               : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
           }`}
         >
           <span>Filters</span>
           {hasActiveFilters && (
-            <span className="bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+            <span className="bg-[#b8253d] text-white text-xs px-1.5 py-0.5 rounded-full">
               {activeFilterCount}
             </span>
           )}
@@ -92,6 +102,7 @@ export default function LibraryControls({
               onHoursFilterChange("all");
               onGenreFilterChange(null);
               onModeFilterChange("all");
+              onPlayStatusFilterChange("all");
             }}
             className="text-sm text-gray-400 hover:text-white transition-colors"
           >
@@ -123,7 +134,7 @@ export default function LibraryControls({
                   }
                   className={`px-3 py-1 rounded text-sm transition-colors ${
                     hoursFilter === option.value
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[#b8253d] text-white"
                       : "bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600"
                   }`}
                 >
@@ -174,7 +185,41 @@ export default function LibraryControls({
                   onClick={() => onModeFilterChange(option.value as ModeFilter)}
                   className={`px-3 py-1 rounded text-sm transition-colors ${
                     modeFilter === option.value
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[#b8253d] text-white"
+                      : "bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Play Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Play Status
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { value: "all", label: "All" },
+                { value: "playing", label: "Playing" },
+                { value: "completed", label: "Completed" },
+                { value: "played", label: "Played" },
+                { value: "backlog", label: "Backlog" },
+                { value: "wishlist", label: "Wishlist" },
+                { value: "shelved", label: "Shelved" },
+                { value: "retired", label: "Retired" },
+                { value: "abandoned", label: "Abandoned" },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() =>
+                    onPlayStatusFilterChange(option.value as PlayStatusFilter)
+                  }
+                  className={`px-3 py-1 rounded text-sm transition-colors ${
+                    playStatusFilter === option.value
+                      ? "bg-[#b8253d] text-white"
                       : "bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600"
                   }`}
                 >

@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import ProfileView from "../../components/ProfileView";
@@ -89,6 +89,7 @@ export default function PublicProfilePage() {
           last_played_at,
           games (
             id,
+            igdb_id,
             title,
             cover_url,
             igdb_rating,

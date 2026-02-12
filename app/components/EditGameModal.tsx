@@ -39,8 +39,8 @@ export default function EditGameModal({ game, onSave, onClose }: EditGameModalPr
       return;
     }
 
-    if (rating !== null && (rating < 1 || rating > 10)) {
-      setError("Rating must be between 1 and 10");
+    if (rating !== null && (rating < 0.5 || rating > 5)) {
+      setError("Rating must be between 0.5 and 5 stars");
       setLoading(false);
       return;
     }
@@ -107,21 +107,21 @@ export default function EditGameModal({ game, onSave, onClose }: EditGameModalPr
 
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-1">
-                  Rating {rating ? `(${rating}/10)` : "(optional)"}
+                  Rating {rating ? `(${rating}★)` : "(optional)"}
                 </label>
                 <div className="flex items-center gap-4">
                   <input
                     type="range"
-                    min="1"
-                    max="10"
+                    min="0.5"
+                    max="5"
                     step="0.5"
-                    value={rating ?? 5}
+                    value={rating ?? 2.5}
                     onChange={(e) => setRating(parseFloat(e.target.value))}
                     className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
                   />
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-semibold text-gray-900 w-10 text-center">
-                      {rating ?? "—"}
+                      {rating ? `${rating}★` : "—"}
                     </span>
                     {rating && (
                       <button

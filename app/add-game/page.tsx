@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import AddGameModal from "../components/AddGameModal";
@@ -14,6 +14,9 @@ interface Game {
     url: string;
   };
   first_release_date?: number;
+  category?: number; // 0=main_game, 1=dlc, 2=expansion, 3=bundle, etc.
+  total_rating_count?: number;
+  follows?: number;
 }
 
 export default function SearchPage() {

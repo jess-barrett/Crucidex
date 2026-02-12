@@ -35,7 +35,7 @@ export async function searchGames(query: string) {
     },
     body: `
       search "${query}";
-      fields name, summary, cover.url, first_release_date, external_games.category, external_games.uid, total_rating, genres, game_modes;
+      fields name, summary, cover.url, first_release_date, category, total_rating, total_rating_count, follows, external_games.category, external_games.uid, genres, game_modes;
       limit 10;
     `,
   });
@@ -60,6 +60,32 @@ export async function getGameById(igdbId: number) {
   });
 
   return response.json();
+}
+
+export async function getGameDetails(igdbId: number) {
+  const token = await getAccessToken();
+
+  const response = await fetch("https://api.igdb.com/v4/games", {
+    method: "POST",
+    headers: {
+      "Client-ID": process.env.TWITCH_CLIENT_ID!,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "text/plain",
+    },
+    body: `
+      where id = ${igdbId};
+      fields name, summary, storyline, cover.url, first_release_date,
+             total_rating, total_rating_count, aggregated_rating, aggregated_rating_count,
+             genres, game_modes,
+             involved_companies.company.name, involved_companies.developer, involved_companies.publisher,
+             platforms.name, platforms.abbreviation,
+             screenshots.url;
+      limit 1;
+    `,
+  });
+
+  const data = await response.json();
+  return data && Array.isArray(data) && data.length > 0 ? data[0] : null;
 }
 
 export async function getGameBySteamAppId(

@@ -7,10 +7,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Missing Supabase environment variables");
 }
 
-/**
- * @deprecated Use @/lib/supabase-client instead for Client Components
- * or @/lib/supabase-server for Server Components
- */
+// For Client Components
 export function createClient() {
   return createBrowserClient(supabaseUrl!, supabaseAnonKey!);
 }
