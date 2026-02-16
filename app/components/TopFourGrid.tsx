@@ -34,7 +34,7 @@ export default function TopFourGrid({
   );
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-4 gap-2">
       {[1, 2, 3, 4].map((position) => {
         const game = topFour.find((g) => g.top_four_position === position);
         const isLeftmostEmpty = !game && position === leftmostEmpty;

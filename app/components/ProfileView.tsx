@@ -319,7 +319,7 @@ export default function ProfileView({
                   No games match your filters.
                 </p>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-4">
                   {displayedLibrary.map((item) => (
                     <GameCard
                       key={item.id}
