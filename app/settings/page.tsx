@@ -356,8 +356,8 @@ function SettingsContent() {
   return (
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-gray-500">
+        <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
+        <p className="text-gray-400">
           Manage your profile and account settings
         </p>
       </div>
@@ -365,17 +365,17 @@ function SettingsContent() {
       {/* Profile Information */}
       <form
         onSubmit={handleSaveProfile}
-        className="bg-white rounded-lg border p-6 mb-6"
+        className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6"
       >
-        <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">Profile Information</h2>
 
         {/* Avatar Upload */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+          <label className="block text-sm font-medium text-white mb-2">
             Profile Picture
           </label>
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center text-2xl overflow-hidden">
+            <div className="w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center text-2xl text-white overflow-hidden">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -392,7 +392,7 @@ function SettingsContent() {
                 accept="image/*"
                 onChange={handleAvatarUpload}
                 disabled={uploadingAvatar}
-                className="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                className="block text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#b8253d] file:text-white hover:file:bg-[#8a1c2e] disabled:opacity-50"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Max 2MB. JPG, PNG, or GIF.
@@ -403,28 +403,28 @@ function SettingsContent() {
 
         {/* Display Name */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-900 mb-1">
+          <label className="block text-sm font-medium text-white mb-1">
             Display Name
           </label>
           <input
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full border rounded p-2 text-gray-900"
+            className="w-full bg-gray-800 border border-gray-600 rounded-lg p-2.5 text-white focus:outline-none focus:border-[#b8253d] transition-colors"
             required
           />
         </div>
 
         {/* Username */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-900 mb-1">
+          <label className="block text-sm font-medium text-white mb-1">
             Username
           </label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value.toLowerCase())}
-            className="w-full border rounded p-2 text-gray-900"
+            className="w-full bg-gray-800 border border-gray-600 rounded-lg p-2.5 text-white focus:outline-none focus:border-[#b8253d] transition-colors"
             required
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -434,13 +434,13 @@ function SettingsContent() {
 
         {/* Bio */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-900 mb-1">
+          <label className="block text-sm font-medium text-white mb-1">
             Bio
           </label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            className="w-full border rounded p-2 text-gray-900"
+            className="w-full bg-gray-800 border border-gray-600 rounded-lg p-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#b8253d] transition-colors"
             rows={3}
             maxLength={160}
             placeholder="Tell us about yourself..."
@@ -457,9 +457,9 @@ function SettingsContent() {
               type="checkbox"
               checked={isPublic}
               onChange={(e) => setIsPublic(e.target.checked)}
-              className="w-4 h-4"
+              className="w-4 h-4 accent-[#b8253d]"
             />
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-sm font-medium text-white">
               Public Profile
             </span>
           </label>
@@ -473,26 +473,26 @@ function SettingsContent() {
         <button
           type="submit"
           disabled={saving || uploadingAvatar}
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          className="w-full bg-[#b8253d] text-white px-4 py-2.5 rounded-lg hover:bg-[#8a1c2e] disabled:opacity-50 transition-colors"
         >
           {saving ? "Saving..." : "Save Profile"}
         </button>
       </form>
 
       {/* Account Settings */}
-      <div className="bg-white rounded-lg border p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
+      <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 className="text-xl font-semibold text-white mb-4">Account Settings</h2>
 
         {/* Email (read-only for now) */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-900 mb-1">
+          <label className="block text-sm font-medium text-white mb-1">
             Email
           </label>
           <input
             type="email"
             value={email}
             disabled
-            className="w-full border rounded p-2 text-gray-500 bg-gray-50"
+            className="w-full bg-gray-900 border border-gray-600 rounded-lg p-2.5 text-gray-500"
           />
           <p className="text-xs text-gray-500 mt-1">
             Contact support to change your email
@@ -501,30 +501,30 @@ function SettingsContent() {
 
         {/* Change Password */}
         <form onSubmit={handleChangePassword}>
-          <h3 className="font-medium text-gray-900 mb-3">Change Password</h3>
+          <h3 className="font-medium text-white mb-3">Change Password</h3>
 
           <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-900 mb-1">
+            <label className="block text-sm font-medium text-white mb-1">
               New Password
             </label>
             <input
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full border rounded p-2 text-gray-900"
+              className="w-full bg-gray-800 border border-gray-600 rounded-lg p-2.5 text-white focus:outline-none focus:border-[#b8253d] transition-colors"
               minLength={6}
             />
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-900 mb-1">
+            <label className="block text-sm font-medium text-white mb-1">
               Confirm New Password
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full border rounded p-2 text-gray-900"
+              className="w-full bg-gray-800 border border-gray-600 rounded-lg p-2.5 text-white focus:outline-none focus:border-[#b8253d] transition-colors"
               minLength={6}
             />
           </div>
@@ -532,7 +532,7 @@ function SettingsContent() {
           <button
             type="submit"
             disabled={changingPassword || !newPassword || !confirmPassword}
-            className="w-full bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-800 disabled:opacity-50"
+            className="w-full bg-[#b8253d] text-white px-4 py-2.5 rounded-lg hover:bg-[#8a1c2e] disabled:opacity-50 transition-colors"
           >
             {changingPassword ? "Changing..." : "Change Password"}
           </button>
@@ -540,24 +540,18 @@ function SettingsContent() {
       </div>
 
       {/* Steam Integration */}
-      <div className="bg-white rounded-lg border p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Steam Integration</h2>
+      <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6">
+        <h2 className="text-xl font-semibold text-white mb-4">Steam Integration</h2>
 
         {steamId ? (
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gray-800 rounded flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-white"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M12 0C5.373 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387l3.063-4.41c-.104-.01-.207-.023-.312-.039l-2.182-3.146a2.794 2.794 0 01-.312-2.12 2.794 2.794 0 011.293-1.74 2.794 2.794 0 012.12-.312c.74.18 1.373.66 1.74 1.293l3.146 2.182c.016.105.029.208.039.312l4.41-3.063C23.197 5.438 18.699 2 12 0zm0 4.5a7.5 7.5 0 110 15 7.5 7.5 0 010-15z" />
-                </svg>
+              <div className="w-10 h-10 bg-gray-700 rounded flex items-center justify-center">
+                <i className="fa-brands fa-steam text-white text-xl"></i>
               </div>
               <div>
-                <p className="font-medium text-gray-900">Steam Connected</p>
-                <p className="text-sm text-gray-500">Steam ID: {steamId}</p>
+                <p className="font-medium text-white">Steam Connected</p>
+                <p className="text-sm text-gray-400">Steam ID: {steamId}</p>
               </div>
             </div>
 
@@ -565,37 +559,38 @@ function SettingsContent() {
               <button
                 onClick={handleImportSteam}
                 disabled={importing}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+                className="flex-1 bg-[#171a21] text-white px-4 py-2.5 rounded-lg hover:bg-[#2a475e] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
               >
+                <i className="fa-brands fa-steam"></i>
                 {importing ? "Importing..." : "Import Steam Library"}
               </button>
               <button
                 onClick={handleUnlinkSteam}
-                className="px-4 py-2 border border-red-300 text-red-600 rounded hover:bg-red-50"
+                className="px-4 py-2.5 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
               >
                 Unlink
               </button>
             </div>
 
             {importResult && (
-              <div className="bg-gray-50 rounded p-4 text-sm">
-                <p className="font-medium mb-2">Import Results</p>
-                <ul className="space-y-1 text-gray-600">
+              <div className="bg-gray-900 rounded-lg p-4 text-sm border border-gray-700">
+                <p className="font-medium text-white mb-2">Import Results</p>
+                <ul className="space-y-1 text-gray-400">
                   <li>Total Steam games: {importResult.totalSteamGames}</li>
                   <li>
                     Games with 30+ min played: {importResult.eligibleGames}
                   </li>
-                  <li className="text-green-600">
+                  <li className="text-green-400">
                     Imported: {importResult.imported}
                   </li>
-                  <li className="text-blue-600">
+                  <li className="text-blue-400">
                     Updated: {importResult.updated}
                   </li>
                   <li className="text-gray-500">
                     Skipped (no changes): {importResult.skipped}
                   </li>
                   {importResult.failed > 0 && (
-                    <li className="text-red-600">
+                    <li className="text-red-400">
                       Failed: {importResult.failed}
                     </li>
                   )}
@@ -610,14 +605,15 @@ function SettingsContent() {
           </div>
         ) : (
           <div>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-400 mb-4">
               Link your Steam account to automatically import your game library
               and playtime.
             </p>
             <a
               href="/api/steam/login"
-              className="inline-block bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-700"
+              className="inline-flex items-center gap-2 bg-[#171a21] text-white px-4 py-2.5 rounded-lg hover:bg-[#2a475e] transition-colors"
             >
+              <i className="fa-brands fa-steam text-lg"></i>
               Link Steam Account
             </a>
           </div>
@@ -628,11 +624,11 @@ function SettingsContent() {
       <div className="flex gap-4">
         <a
           href={`/u/${profile.username}`}
-          className="text-blue-500 hover:underline"
+          className="text-[#b8253d] hover:text-[#8a1c2e] transition-colors"
         >
           ← Back to profile
         </a>
-        <a href="/" className="text-blue-500 hover:underline">
+        <a href="/" className="text-[#b8253d] hover:text-[#8a1c2e] transition-colors">
           Home
         </a>
       </div>
