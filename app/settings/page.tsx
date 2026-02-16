@@ -23,6 +23,7 @@ interface ImportResult {
   updated: number;
   skipped: number;
   failed: number;
+  games: Array<{ name: string; status: string; error?: string }>;
 }
 
 function SettingsContent() {
@@ -574,27 +575,26 @@ function SettingsContent() {
 
             {importResult && (
               <div className="bg-gray-900 rounded-lg p-4 text-sm border border-gray-700">
-                <p className="font-medium text-white mb-2">Import Results</p>
-                <ul className="space-y-1 text-gray-400">
-                  <li>Total Steam games: {importResult.totalSteamGames}</li>
-                  <li>
-                    Games with 30+ min played: {importResult.eligibleGames}
-                  </li>
-                  <li className="text-green-400">
-                    Imported: {importResult.imported}
-                  </li>
-                  <li className="text-blue-400">
-                    Updated: {importResult.updated}
-                  </li>
-                  <li className="text-gray-500">
-                    Skipped (no changes): {importResult.skipped}
-                  </li>
-                  {importResult.failed > 0 && (
-                    <li className="text-red-400">
-                      Failed: {importResult.failed}
-                    </li>
-                  )}
-                </ul>
+                <p className="text-gray-300 mb-3">
+                  <span className="font-medium">{importResult.totalSteamGames}</span> games in your library. <span className="font-medium">{importResult.eligibleGames}</span> have 30+ min of playing time. <span className="font-medium text-green-400">{importResult.imported + importResult.updated}</span> were imported successfully.
+                </p>
+
+                {importResult.failed > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-700">
+                    <p className="font-medium text-red-400 mb-2">
+                      The unsuccessful imports and non-games were:
+                    </p>
+                    <ul className="space-y-1 text-gray-400 ml-4">
+                      {importResult.games
+                        .filter(g => g.status === "failed")
+                        .map((game, idx) => (
+                          <li key={idx} className="text-sm">
+                            • {game.name} {game.error && `(${game.error})`}
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 

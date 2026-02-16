@@ -637,7 +637,7 @@ function findBestMatch(
     // Penalty for games with subtitles when search doesn't have one
     // This helps "Planet Crafter" beat "The Planet Crafter: Toxicity"
     if (gameHasSubtitle && !searchHasSubtitle) {
-      score -= 40; // Likely DLC or expansion, not the base game
+      score -= 40;
     }
 
     // Popularity bonus - base games typically have more ratings/followers than DLC

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase";
+import { createServerComponentClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Get the current user and save their Steam ID
-  const supabase = createClient();
+  const supabase = await createServerComponentClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
