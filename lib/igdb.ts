@@ -88,6 +88,45 @@ export async function getGameDetails(igdbId: number) {
   return data && Array.isArray(data) && data.length > 0 ? data[0] : null;
 }
 
+export async function getGamesByIds(igdbIds: number[]) {
+  if (igdbIds.length === 0) return [];
+  const token = await getAccessToken();
+
+  const response = await fetch("https://api.igdb.com/v4/games", {
+    method: "POST",
+    headers: {
+      "Client-ID": process.env.TWITCH_CLIENT_ID!,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "text/plain",
+    },
+    body: `fields id, name, cover.url, total_rating, genres, category; where id = (${igdbIds.join(",")}); limit 20;`,
+  });
+
+  return response.json();
+}
+
+export async function getTopGamesByGenres(genreIds: number[], limit: number = 20) {
+  if (genreIds.length === 0) return [];
+  const token = await getAccessToken();
+
+  // In IGDB, `genres = (a,b,c)` requires ALL genres — far too restrictive.
+  // Instead, query for the top genre only using a single value (array "contains" check).
+  // Category filtering is done in code to avoid IGDB quirks with combined constraints.
+  const topGenre = genreIds[0];
+
+  const response = await fetch("https://api.igdb.com/v4/games", {
+    method: "POST",
+    headers: {
+      "Client-ID": process.env.TWITCH_CLIENT_ID!,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "text/plain",
+    },
+    body: `fields id, name, cover.url, total_rating, genres, category; where genres = ${topGenre} & total_rating != null & total_rating_count > 20; sort total_rating desc; limit ${limit};`,
+  });
+
+  return response.json();
+}
+
 export async function getGameBySteamAppId(
   steamAppId: number,
   gameName?: string,

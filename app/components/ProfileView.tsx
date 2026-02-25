@@ -60,7 +60,8 @@ interface ProfileViewProps {
   onEditGame: (
     gameId: string,
     hours: number,
-    rating: number | null
+    rating: number | null,
+    playStatus: string
   ) => Promise<void>;
   onDeleteGame: (gameId: string) => Promise<void>;
 }
@@ -213,10 +214,11 @@ export default function ProfileView({
   async function handleEditSave(
     gameId: string,
     hours: number,
-    rating: number | null
+    rating: number | null,
+    playStatus: string
   ) {
     try {
-      await onEditGame(gameId, hours, rating);
+      await onEditGame(gameId, hours, rating, playStatus);
       setEditingGame(null);
       setToast({ message: "Game updated!", type: "success" });
     } catch (err) {
@@ -350,8 +352,8 @@ export default function ProfileView({
       {isOwnProfile && editingGame && (
         <EditGameModal
           game={editingGame}
-          onSave={(hours, rating) =>
-            handleEditSave(editingGame.id, hours, rating)
+          onSave={(hours, rating, playStatus) =>
+            handleEditSave(editingGame.id, hours, rating, playStatus)
           }
           onClose={() => setEditingGame(null)}
         />

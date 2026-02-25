@@ -20,10 +20,12 @@ interface UserGame {
   playtime_hours: number;
   rating: number | null;
   top_four_position: number | null;
+  play_status: string | null;
   added_at?: string;
   last_played_at?: string;
   games: {
     id: string;
+    igdb_id: number;
     title: string;
     cover_url: string | null;
     igdb_rating: number | null;
@@ -85,6 +87,7 @@ export default function PublicProfilePage() {
           playtime_hours,
           rating,
           top_four_position,
+          play_status,
           added_at,
           last_played_at,
           games (
@@ -160,13 +163,14 @@ export default function PublicProfilePage() {
     }
   }
 
-  async function handleEditGame(gameId: string, hours: number, rating: number | null) {
+  async function handleEditGame(gameId: string, hours: number, rating: number | null, playStatus: string) {
     try {
       const { data, error } = await supabase
         .from('user_games')
         .update({
           playtime_hours: hours,
-          rating: rating
+          rating: rating,
+          play_status: playStatus,
         })
         .eq('id', gameId)
         .select();
@@ -255,7 +259,7 @@ export default function PublicProfilePage() {
       availableGenres={genres}
       onSelectTopFour={handleSelectTopFour}
       onRemoveTopFour={handleRemoveTopFour}
-      onEditGame={handleEditGame}
+      onEditGame={(gameId, hours, rating, playStatus) => handleEditGame(gameId, hours, rating, playStatus)}
       onDeleteGame={handleDeleteGame}
     />
   );
