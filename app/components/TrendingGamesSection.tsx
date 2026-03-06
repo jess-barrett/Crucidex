@@ -97,11 +97,6 @@ export default function TrendingGamesSection() {
                     {rec.game.title}
                   </div>
                 )}
-                {rec.game.igdb_rating && (
-                  <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                    {Math.round(rec.game.igdb_rating)}
-                  </div>
-                )}
               </div>
               <div className="p-3 group-hover:bg-gray-800 transition-colors">
                 <h3 className="font-medium text-white truncate text-sm">
