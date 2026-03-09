@@ -181,6 +181,7 @@ export default function PublicProfilePage() {
         throw new Error('Update failed - no rows affected');
       }
 
+      fetch("/api/recommendations", { method: "DELETE" }).catch(() => {});
       await loadProfile();
     } catch (err) {
       throw err;
@@ -196,6 +197,7 @@ export default function PublicProfilePage() {
 
       if (error) throw error;
 
+      fetch("/api/recommendations", { method: "DELETE" }).catch(() => {});
       await loadProfile();
     } catch (err) {
       throw err;

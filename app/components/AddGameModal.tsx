@@ -120,6 +120,8 @@ export default function AddGameModal({
         return;
       }
 
+      // Invalidate recommendations cache so next visit recomputes
+      fetch("/api/recommendations", { method: "DELETE" }).catch(() => {});
       onAdded();
     } catch (err) {
       setError("Something went wrong");
