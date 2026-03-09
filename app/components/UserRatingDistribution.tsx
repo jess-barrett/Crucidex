@@ -15,17 +15,14 @@ export default function UserRatingDistribution({
   library,
 }: UserRatingDistributionProps) {
   const stats = useMemo(() => {
-    // Filter rated games
     const ratedGames = library.filter((g) => g.rating !== null);
     const totalRatings = ratedGames.length;
 
-    // Compute average rating
     const averageRating =
       totalRatings > 0
         ? ratedGames.reduce((sum, g) => sum + (g.rating || 0), 0) / totalRatings
         : null;
 
-    // Compute rating distribution
     const ratingDistribution: Record<number, number> = {};
     ratedGames.forEach((g) => {
       if (g.rating) {
@@ -40,6 +37,9 @@ export default function UserRatingDistribution({
     };
   }, [library]);
 
+  const ratingValues = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+  const maxHeight = 160;
+
   return (
     <div className="bg-gray-800/50 rounded-xl p-6 lg:p-8">
       <h2 className="text-2xl font-bold text-white mb-4">
@@ -48,7 +48,6 @@ export default function UserRatingDistribution({
 
       {stats.totalRatings > 0 ? (
         <>
-          {/* Average Rating Indicator */}
           {stats.averageRating && (
             <div className="flex items-center justify-center mb-6">
               <div className="text-center">
@@ -61,67 +60,62 @@ export default function UserRatingDistribution({
           )}
 
           {(() => {
-            // Calculate max count once for all bars
             const maxCount = Math.max(
-              ...Object.values(stats.ratingDistribution),
+              ...ratingValues.map((r) => stats.ratingDistribution[r] || 0),
               1,
             );
 
-            const maxHeight = 160; // h-40 = 160px
-
             return (
-              <div className="flex items-end justify-between gap-1.5 h-40">
-                {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((rating) => {
-                  const count = stats.ratingDistribution[rating] || 0;
+              <div>
+                <div className="flex items-end gap-1.5" style={{ height: `${maxHeight}px` }}>
+                  {ratingValues.map((rating) => {
+                    const count = stats.ratingDistribution[rating] || 0;
+                    const barHeight = count > 0 ? Math.max((count / maxCount) * maxHeight, 8) : 0;
+                    const distributionPercentage =
+                      stats.totalRatings > 0
+                        ? (count / stats.totalRatings) * 100
+                        : 0;
 
-                  // Calculate height in pixels relative to max count
-                  const barHeight =
-                    count > 0
-                      ? Math.max((count / maxCount) * maxHeight, 20)
-                      : 0;
-
-                  // Distribution percentage shows actual proportion of total ratings
-                  const distributionPercentage =
-                    stats.totalRatings > 0
-                      ? (count / stats.totalRatings) * 100
-                      : 0;
-
-                  const hasVotes = count > 0;
-
-                  return (
+                    return (
+                      <div
+                        key={rating}
+                        className="flex-1 flex flex-col items-end justify-end h-full group"
+                        style={{ minWidth: "20px" }}
+                      >
+                        {count > 0 && (
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-1">
+                            <span className="text-xs text-gray-400 whitespace-nowrap">
+                              {count} ({Math.round(distributionPercentage)}%)
+                            </span>
+                          </div>
+                        )}
+                        {count > 0 ? (
+                          <div
+                            className="w-full rounded-t transition-all"
+                            style={{
+                              height: `${barHeight}px`,
+                              backgroundColor: "#b8253d",
+                              border: "1px solid #b8253d",
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-1 bg-gray-600 rounded" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex gap-1.5 mt-2">
+                  {ratingValues.map((rating) => (
                     <div
                       key={rating}
-                      className="flex-1 flex flex-col items-center justify-end group"
+                      className="flex-1 text-center text-xs text-gray-400 font-medium"
                       style={{ minWidth: "20px" }}
                     >
-                      {/* Percentage tooltip on hover */}
-                      {hasVotes && (
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-1">
-                          <span className="text-xs text-gray-400">
-                            {count} ({Math.round(distributionPercentage)}%)
-                          </span>
-                        </div>
-                      )}
-                      {/* Vertical bar or dash */}
-                      {hasVotes ? (
-                        <div
-                          className="w-full rounded-t transition-all"
-                          style={{
-                            height: `${barHeight}px`,
-                            backgroundColor: "#b8253d",
-                            border: "1px solid #b8253d",
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-1 bg-gray-600 rounded mb-1" />
-                      )}
-                      {/* Rating label */}
-                      <div className="mt-2 text-xs text-gray-400 font-medium">
-                        {rating}★
-                      </div>
+                      {rating}★
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             );
           })()}

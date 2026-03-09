@@ -62,52 +62,68 @@ export default function GameStatsSection({ stats }: GameStatsSectionProps) {
             </div>
           )}
 
-          <div className="flex items-end justify-between gap-1.5 h-40">
-            {[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].map((rating) => {
-              const count = stats.ratingDistribution[rating] || 0;
-              const percentage =
-                stats.totalRatings > 0
-                  ? (count / stats.totalRatings) * 100
-                  : 0;
+          {(() => {
+            const ratingValues = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+            const maxCount = Math.max(
+              ...ratingValues.map((r) => stats.ratingDistribution[r] || 0),
+              1,
+            );
+            const maxHeight = 160;
 
-              const hasVotes = count > 0;
+            return (
+              <div>
+                <div className="flex items-end gap-1.5" style={{ height: `${maxHeight}px` }}>
+                  {ratingValues.map((rating) => {
+                    const count = stats.ratingDistribution[rating] || 0;
+                    const barHeight = count > 0 ? Math.max((count / maxCount) * maxHeight, 8) : 0;
+                    const percentage =
+                      stats.totalRatings > 0
+                        ? (count / stats.totalRatings) * 100
+                        : 0;
 
-              return (
-                <div
-                  key={rating}
-                  className="flex-1 flex flex-col items-center justify-end group"
-                  style={{ minWidth: '20px' }}
-                >
-                  {/* Percentage tooltip on hover */}
-                  {hasVotes && (
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-1">
-                      <span className="text-xs text-gray-400">
-                        {count} ({Math.round(percentage)}%)
-                      </span>
-                    </div>
-                  )}
-                  {/* Vertical bar or dash */}
-                  {hasVotes ? (
-                    <div
-                      className="w-full rounded-t transition-all"
-                      style={{
-                        height: `${Math.max(percentage, 5)}%`,
-                        minHeight: '20px',
-                        backgroundColor: '#0047AB',
-                        border: '1px solid #0047AB'
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-1 bg-gray-600 rounded mb-1" />
-                  )}
-                  {/* Rating label */}
-                  <div className="mt-2 text-xs text-gray-400 font-medium">
-                    {rating}★
-                  </div>
+                    return (
+                      <div
+                        key={rating}
+                        className="flex-1 flex flex-col items-end justify-end h-full group"
+                        style={{ minWidth: "20px" }}
+                      >
+                        {count > 0 && (
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity mb-1">
+                            <span className="text-xs text-gray-400 whitespace-nowrap">
+                              {count} ({Math.round(percentage)}%)
+                            </span>
+                          </div>
+                        )}
+                        {count > 0 ? (
+                          <div
+                            className="w-full rounded-t transition-all"
+                            style={{
+                              height: `${barHeight}px`,
+                              backgroundColor: "#b8253d",
+                              border: "1px solid #b8253d",
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-1 bg-gray-600 rounded" />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+                <div className="flex gap-1.5 mt-2">
+                  {ratingValues.map((rating) => (
+                    <div
+                      key={rating}
+                      className="flex-1 text-center text-xs text-gray-400 font-medium"
+                      style={{ minWidth: "20px" }}
+                    >
+                      {rating}★
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>

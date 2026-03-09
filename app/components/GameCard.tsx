@@ -39,7 +39,7 @@ export default function GameCard({
 
     const badges: Record<PlayStatus, { label: string; color: string }> = {
       playing: { label: "Playing", color: "bg-green-600" },
-      completed: { label: "Completed", color: "bg-blue-600" },
+      completed: { label: "Completed", color: "bg-[#b8253d]" },
       played: { label: "Played", color: "bg-gray-600" },
       backlog: { label: "Backlog", color: "bg-yellow-600" },
       wishlist: { label: "Wishlist", color: "bg-purple-600" },

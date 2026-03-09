@@ -54,7 +54,7 @@ export default function GameActionButtons({
               {userGame.rating && (
                 <>
                   {" "}
-                  • Rated <span className="text-[#0047AB] font-semibold">
+                  • Rated <span className="text-[#b8253d] font-semibold">
                     {userGame.rating}★
                   </span>
                 </>
@@ -87,7 +87,7 @@ export default function GameActionButtons({
         // Not in library - show Add button
         <button
           onClick={handleAddToLibrary}
-          className="bg-[#0047AB] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+          className="bg-[#b8253d] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
         >
           {isLoggedIn ? "Add to Library" : "Log in to Add"}
         </button>
