@@ -13,6 +13,7 @@ interface UserGame {
   playtime_hours: number;
   rating: number | null;
   top_four_position: number | null;
+  play_status: string | null;
   added_at: string;
   last_played_at: string | null;
   games: {
@@ -62,6 +63,7 @@ export default function DashboardPage({ userId }: { userId: string }) {
             playtime_hours,
             rating,
             top_four_position,
+            play_status,
             added_at,
             last_played_at,
             games (

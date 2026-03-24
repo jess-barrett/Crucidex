@@ -34,23 +34,23 @@ export default function SelectGameModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-white">
               Select Game for Position {position}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+              className="text-gray-400 hover:text-white text-2xl leading-none"
             >
               ×
             </button>
           </div>
 
           {availableGames.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">
+            <p className="text-gray-400 text-center py-8">
               No games available. All your games are either already in your Top
               4 or your library is empty.
             </p>
@@ -60,7 +60,7 @@ export default function SelectGameModal({
                 <button
                   key={item.id}
                   onClick={() => onSelect(item.id)}
-                  className="border rounded-lg overflow-hidden bg-gray-900 hover:ring-2 hover:ring-[#b8253d] transition-all text-left"
+                  className="rounded-lg overflow-hidden bg-gray-900 hover:ring-2 hover:ring-[#b8253d] transition-all text-left"
                 >
                   <div className="aspect-[3/4]">
                     {item.games?.cover_url ? (
@@ -96,11 +96,11 @@ export default function SelectGameModal({
           )}
         </div>
 
-        <div className="border-t px-6 py-4 flex justify-end">
+        <div className="border-t border-gray-700 px-6 py-4 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded text-gray-700 hover:bg-gray-100"
+            className="px-4 py-2 rounded text-gray-300 hover:bg-gray-700"
           >
             Cancel
           </button>
