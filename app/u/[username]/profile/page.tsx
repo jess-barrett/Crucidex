@@ -80,6 +80,9 @@ export default function ProfilePage() {
   const [friendsCount, setFriendsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [friendStatus, setFriendStatus] = useState<"none" | "pending_sent" | "pending_received" | "accepted">("none");
+  const [friendActionLoading, setFriendActionLoading] = useState(false);
   const [selectingPosition, setSelectingPosition] = useState<number | null>(null);
   const supabase = createClient();
 
@@ -103,6 +106,19 @@ export default function ProfilePage() {
     setProfile(profileData);
     const isOwner = user?.id === profileData.id;
     setIsOwnProfile(isOwner);
+    setIsLoggedIn(!!user);
+
+    // Check friendship status if viewing another user's profile
+    if (user && !isOwner) {
+      fetch(`/api/friends?type=status&username=${encodeURIComponent(username)}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.status === "accepted") setFriendStatus("accepted");
+          else if (data.status === "pending") setFriendStatus(data.isRequester ? "pending_sent" : "pending_received");
+          else setFriendStatus("none");
+        })
+        .catch(() => {});
+    }
 
     // Load library, reviews, activity, and friends count in parallel
     const [libraryRes, reviewsRes, activityRes, friendsRes] = await Promise.all([
@@ -234,6 +250,19 @@ export default function ProfilePage() {
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
+  async function handleFriendAction() {
+    setFriendActionLoading(true);
+    if (friendStatus === "none") {
+      const res = await fetch("/api/friends", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+      if (res.ok) setFriendStatus("pending_sent");
+    }
+    setFriendActionLoading(false);
+  }
+
   // Top 4 handlers
   async function handleRemoveTopFour(gameId: string) {
     await supabase
@@ -303,13 +332,33 @@ export default function ProfilePage() {
                 {profile.display_name}
               </h1>
               <p className="text-gray-400 text-sm">@{profile.username}</p>
-              {isOwnProfile && (
+              {isOwnProfile ? (
                 <a
                   href="/settings"
                   className="inline-block mt-1.5 text-xs text-gray-400 hover:text-white border border-gray-600 hover:border-gray-500 rounded px-3 py-1 transition-colors"
                 >
                   Edit Profile
                 </a>
+              ) : isLoggedIn && (
+                <button
+                  onClick={handleFriendAction}
+                  disabled={friendActionLoading || friendStatus === "accepted" || friendStatus === "pending_sent"}
+                  className={`inline-flex items-center gap-1.5 mt-1.5 text-xs rounded px-3 py-1 transition-colors ${
+                    friendStatus === "accepted"
+                      ? "bg-[#b8253d]/20 border border-[#b8253d]/40 text-[#b8253d]"
+                      : friendStatus === "pending_sent"
+                      ? "bg-gray-700 border border-gray-600 text-gray-400"
+                      : "bg-[#b8253d] hover:bg-[#8a1c2e] text-white"
+                  } disabled:opacity-75`}
+                >
+                  {friendStatus === "accepted" ? (
+                    <><i className="fa-solid fa-user-check"></i> You Are Friends</>
+                  ) : friendStatus === "pending_sent" ? (
+                    <><i className="fa-solid fa-clock"></i> Request Sent</>
+                  ) : (
+                    <><i className="fa-solid fa-user-plus"></i> Add Friend</>
+                  )}
+                </button>
               )}
             </div>
           </div>

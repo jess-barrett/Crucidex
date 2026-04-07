@@ -29,7 +29,6 @@ export default function Header() {
   const [username, setUsername] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Game[]>([]);
-  const [userResults, setUserResults] = useState<{ id: string; username: string; display_name: string; avatar_url: string | null }[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [searching, setSearching] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -39,7 +38,12 @@ export default function Header() {
     type: "success" | "error";
   } | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
+  const [userQuery, setUserQuery] = useState("");
+  const [userResults, setUserResults] = useState<{ id: string; username: string; display_name: string; avatar_url: string | null }[]>([]);
+  const [userSearching, setUserSearching] = useState(false);
+  const [showUserResults, setShowUserResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const userSearchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -111,6 +115,12 @@ export default function Header() {
       ) {
         setShowResults(false);
       }
+      if (
+        userSearchRef.current &&
+        !userSearchRef.current.contains(event.target as Node)
+      ) {
+        setShowUserResults(false);
+      }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -121,7 +131,6 @@ export default function Header() {
     setSearchQuery(query);
     if (!query.trim()) {
       setSearchResults([]);
-      setUserResults([]);
       setShowResults(false);
       return;
     }
@@ -129,24 +138,43 @@ export default function Header() {
     setSearching(true);
     setShowResults(true);
     try {
-      // Search games and users in parallel
-      const [gamesResponse, usersResponse] = await Promise.all([
-        fetch(`/api/games/search?q=${encodeURIComponent(query)}`),
-        supabase
-          .from("profiles")
-          .select("id, username, display_name, avatar_url")
-          .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-          .limit(3),
-      ]);
-
-      const gamesData = await gamesResponse.json();
-      setSearchResults(gamesData.slice(0, 5));
-      setUserResults(usersResponse.data || []);
+      const response = await fetch(
+        `/api/games/search?q=${encodeURIComponent(query)}`
+      );
+      const data = await response.json();
+      setSearchResults(data.slice(0, 5));
     } catch (error) {
       console.error("Search error:", error);
     } finally {
       setSearching(false);
     }
+  }
+
+  async function handleUserSearch(query: string) {
+    setUserQuery(query);
+    if (!query.trim()) {
+      setUserResults([]);
+      setShowUserResults(false);
+      return;
+    }
+
+    setUserSearching(true);
+    setShowUserResults(true);
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+      .limit(5);
+
+    setUserResults(data || []);
+    setUserSearching(false);
+  }
+
+  function handleUserClick(clickedUsername: string) {
+    setShowUserResults(false);
+    setUserQuery("");
+    setUserResults([]);
+    router.push(`/u/${clickedUsername}/profile`);
   }
 
   function getCoverUrl(game: Game): string {
@@ -200,7 +228,7 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => searchQuery && setShowResults(true)}
-                placeholder="Search games or users..."
+                placeholder="Search games..."
                 className="w-full bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 px-4 py-2 rounded-lg focus:outline-none focus:border-[#b8253d] transition-colors"
               />
               <i className="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
@@ -213,96 +241,42 @@ export default function Header() {
                   <div className="p-4 text-center text-gray-400">
                     Searching...
                   </div>
-                ) : searchResults.length === 0 && userResults.length === 0 ? (
+                ) : searchResults.length > 0 ? (
+                  searchResults.map((game) => (
+                    <button
+                      key={game.id}
+                      onClick={() => handleGameClick(game.id)}
+                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700 last:border-b-0"
+                    >
+                      {getCoverUrl(game) ? (
+                        <img
+                          src={getCoverUrl(game)}
+                          alt={game.name}
+                          className="w-12 h-16 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
+                          <i className="fa-solid fa-gamepad text-gray-500"></i>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-white truncate">
+                          {game.name}
+                        </p>
+                        {game.first_release_date && (
+                          <p className="text-sm text-gray-400">
+                            {new Date(
+                              game.first_release_date * 1000,
+                            ).getFullYear()}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  ))
+                ) : (
                   <div className="p-4 text-center text-gray-400">
                     No results found
                   </div>
-                ) : (
-                  <>
-                    {/* User Results */}
-                    {userResults.length > 0 && (
-                      <>
-                        <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
-                          Users
-                        </div>
-                        {userResults.map((u) => (
-                          <button
-                            key={u.id}
-                            onClick={() => {
-                              setShowResults(false);
-                              setSearchQuery("");
-                              setSearchResults([]);
-                              setUserResults([]);
-                              router.push(`/u/${u.username}/profile`);
-                            }}
-                            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-b-0"
-                          >
-                            <div className="w-8 h-8 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                              {u.avatar_url ? (
-                                <img
-                                  src={u.avatar_url}
-                                  alt={u.display_name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-white font-bold text-xs">
-                                  {u.display_name.charAt(0).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white text-sm truncate">
-                                {u.username}
-                              </p>
-                              <p className="text-xs text-gray-400 truncate">
-                                {u.display_name}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </>
-                    )}
-
-                    {/* Game Results */}
-                    {searchResults.length > 0 && (
-                      <>
-                        <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
-                          Games
-                        </div>
-                        {searchResults.map((game) => (
-                          <button
-                            key={game.id}
-                            onClick={() => handleGameClick(game.id)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-b-0"
-                          >
-                            {getCoverUrl(game) ? (
-                              <img
-                                src={getCoverUrl(game)}
-                                alt={game.name}
-                                className="w-12 h-16 object-cover rounded"
-                              />
-                            ) : (
-                              <div className="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
-                                <i className="fa-solid fa-gamepad text-gray-500"></i>
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white truncate">
-                                {game.name}
-                              </p>
-                              {game.first_release_date && (
-                                <p className="text-sm text-gray-400">
-                                  {new Date(
-                                    game.first_release_date * 1000,
-                                  ).getFullYear()}
-                                </p>
-                              )}
-                            </div>
-                          </button>
-                        ))}
-                      </>
-                    )}
-                  </>
                 )}
               </div>
             )}
@@ -312,6 +286,66 @@ export default function Header() {
         <div className="flex items-center gap-3 flex-shrink-0">
           {user ? (
             <>
+              {/* User Search — icon expands to search bar on hover */}
+              <div ref={userSearchRef} className="relative group/user flex items-center">
+                <div className="flex items-center bg-gray-700 hover:bg-gray-600 rounded-lg h-9 px-2.5 transition-all duration-300 overflow-hidden">
+                  <i className="fa-solid fa-user text-sm text-gray-300 flex-shrink-0"></i>
+                  <input
+                    type="text"
+                    value={userQuery}
+                    onChange={(e) => handleUserSearch(e.target.value)}
+                    onFocus={() => userQuery && setShowUserResults(true)}
+                    placeholder="Find user"
+                    className="max-w-0 opacity-0 group-hover/user:max-w-[140px] group-hover/user:opacity-100 group-hover/user:ml-2 transition-all duration-300 text-sm bg-transparent text-white placeholder-gray-400 outline-none w-[140px] focus:max-w-[140px] focus:opacity-100 focus:ml-2"
+                  />
+                </div>
+
+                {/* User Results Dropdown */}
+                {showUserResults && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                    {userSearching ? (
+                      <div className="p-3 text-center text-gray-400 text-sm">
+                        Searching...
+                      </div>
+                    ) : userResults.length > 0 ? (
+                      userResults.map((u) => (
+                        <button
+                          key={u.id}
+                          onClick={() => handleUserClick(u.username)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-b-0"
+                        >
+                          <div className="w-8 h-8 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {u.avatar_url ? (
+                              <img
+                                src={u.avatar_url}
+                                alt={u.display_name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-white font-bold text-xs">
+                                {u.display_name.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-white text-sm truncate">
+                              {u.username}
+                            </p>
+                            <p className="text-xs text-gray-400 truncate">
+                              {u.display_name}
+                            </p>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-3 text-center text-gray-400 text-sm">
+                        No users found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Add Game Button — icon-only, expands left on hover */}
               <button
                 onClick={() => setShowSearchModal(true)}
