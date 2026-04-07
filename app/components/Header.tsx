@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import SearchGameModal from "./SearchGameModal";
 import AddGameModal from "./AddGameModal";
+import FriendRequestsDropdown from "./FriendRequestsDropdown";
 import Toast from "./Toast";
 
 interface Game {
@@ -235,27 +236,102 @@ export default function Header() {
           </div>
         )}
 
-        <div className="flex items-center gap-4 flex-shrink-0">
+        <div className="flex items-center gap-3 flex-shrink-0">
           {user ? (
             <>
+              {/* Add Game Button — icon-only, expands left on hover */}
               <button
                 onClick={() => setShowSearchModal(true)}
-                className="text-gray-300 hover:text-white transition-colors"
+                className="group flex items-center bg-[#b8253d] hover:bg-[#8a1c2e] text-white rounded-lg h-9 px-2.5 transition-all duration-300 overflow-hidden"
               >
-                Add Game
+                <i className="fa-solid fa-plus text-sm flex-shrink-0"></i>
+                <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-[80px] group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 text-sm font-medium">
+                  Add Game
+                </span>
               </button>
-              <a
-                href={username ? `/u/${username}` : "/profile"}
-                className="text-gray-300 hover:text-white transition-colors"
-              >
-                Profile
-              </a>
-              <button
-                onClick={handleLogout}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                Log Out
-              </button>
+
+              {/* Friend Requests */}
+              <FriendRequestsDropdown />
+
+              {/* Username Dropdown */}
+              <div className="relative group/nav">
+                <button className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors py-2">
+                  <span className="text-sm font-medium">{username || "Menu"}</span>
+                  <i className="fa-solid fa-chevron-down text-[10px] transition-transform group-hover/nav:rotate-180"></i>
+                </button>
+
+                {/* Dropdown Menu */}
+                <div className="absolute right-0 top-full pt-1 opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 z-50">
+                  <div className="bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl w-48 py-1 overflow-hidden">
+                    <a
+                      href="/"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-house w-4 text-center text-xs"></i>
+                      Home
+                    </a>
+                    <a
+                      href={username ? `/u/${username}/profile` : "/profile"}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-user w-4 text-center text-xs"></i>
+                      Profile
+                    </a>
+                    <a
+                      href={username ? `/u/${username}/library` : "/profile"}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-gamepad w-4 text-center text-xs"></i>
+                      Library
+                    </a>
+                    <a
+                      href={username ? `/u/${username}/activity` : "#"}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-clock-rotate-left w-4 text-center text-xs"></i>
+                      Activity
+                    </a>
+                    <a
+                      href={username ? `/u/${username}/friends` : "#"}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-user-group w-4 text-center text-xs"></i>
+                      Friends
+                    </a>
+                    <a
+                      href={username ? `/u/${username}/reviews` : "#"}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-star w-4 text-center text-xs"></i>
+                      Reviews
+                    </a>
+                    <a
+                      href={username ? `/u/${username}/wishlist` : "#"}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-bookmark w-4 text-center text-xs"></i>
+                      Wishlist
+                    </a>
+
+                    <div className="border-t border-gray-700 my-1"></div>
+
+                    <a
+                      href="/settings"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-gear w-4 text-center text-xs"></i>
+                      Settings
+                    </a>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-700/50 hover:text-white transition-colors"
+                    >
+                      <i className="fa-solid fa-right-from-bracket w-4 text-center text-xs"></i>
+                      Log Out
+                    </button>
+                  </div>
+                </div>
+              </div>
             </>
           ) : (
             <>

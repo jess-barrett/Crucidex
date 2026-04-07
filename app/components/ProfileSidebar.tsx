@@ -1,6 +1,7 @@
 "use client";
 
 import TopFourGrid from "./TopFourGrid";
+import FriendRequestButton from "./FriendRequestButton";
 
 interface Profile {
   id: string;
@@ -27,6 +28,7 @@ interface ProfileSidebarProps {
   profile: Profile;
   topFour: UserGame[];
   isOwnProfile: boolean;
+  isLoggedIn: boolean;
   onSelectTopFour: (position: number) => void;
   onRemoveTopFour: (gameId: string) => void;
 }
@@ -35,6 +37,7 @@ export default function ProfileSidebar({
   profile,
   topFour,
   isOwnProfile,
+  isLoggedIn,
   onSelectTopFour,
   onRemoveTopFour,
 }: ProfileSidebarProps) {
@@ -96,6 +99,15 @@ export default function ProfileSidebar({
         >
           Edit Profile
         </a>
+      )}
+
+      {/* Friend Request Button (only on other users' profiles) */}
+      {!isOwnProfile && (
+        <FriendRequestButton
+          targetUsername={profile.username}
+          isLoggedIn={isLoggedIn}
+          isOwnProfile={isOwnProfile}
+        />
       )}
     </div>
   );

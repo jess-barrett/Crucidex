@@ -54,6 +54,7 @@ interface ProfileViewProps {
   profile: Profile;
   library: UserGame[];
   isOwnProfile: boolean;
+  isLoggedIn?: boolean;
   availableGenres?: Genre[];
   onSelectTopFour: (gameId: string, position: number) => Promise<void>;
   onRemoveTopFour: (gameId: string) => Promise<void>;
@@ -70,6 +71,7 @@ export default function ProfileView({
   profile,
   library,
   isOwnProfile,
+  isLoggedIn = false,
   availableGenres = [],
   onSelectTopFour,
   onRemoveTopFour,
@@ -259,6 +261,7 @@ export default function ProfileView({
               profile={profile}
               topFour={topFour}
               isOwnProfile={isOwnProfile}
+              isLoggedIn={isLoggedIn}
               onSelectTopFour={(position) => setSelectingPosition(position)}
               onRemoveTopFour={handleRemove}
             />

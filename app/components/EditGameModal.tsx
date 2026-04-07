@@ -26,7 +26,7 @@ const PLAY_STATUS_OPTIONS: { value: PlayStatus; label: string; description: stri
   { value: "completed", label: "Completed", description: "Accomplished main objective" },
   { value: "played", label: "Played", description: "Played (not specific)" },
   { value: "backlog", label: "Backlog", description: "Own it but haven't started" },
-  { value: "wishlist", label: "Wishlist", description: "Want to play (don't own yet)" },
+
   { value: "shelved", label: "Shelved", description: "Unfinished but could play again" },
   { value: "retired", label: "Retired", description: "No longer playing (no ending)" },
   { value: "abandoned", label: "Abandoned", description: "Unfinished and not picking back up" },

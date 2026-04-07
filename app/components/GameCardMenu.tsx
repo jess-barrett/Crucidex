@@ -38,14 +38,14 @@ export default function GameCardMenu({ onEdit, onDelete }: GameCardMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg z-50 min-w-[120px] overflow-hidden">
+        <div className="absolute right-0 top-full mt-1 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-50 min-w-[120px] overflow-hidden">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setIsOpen(false);
               onEdit();
             }}
-            className="w-full px-4 py-2 text-left text-gray-900 hover:bg-gray-100 transition-colors"
+            className="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-800 transition-colors"
           >
             Edit
           </button>
@@ -55,7 +55,7 @@ export default function GameCardMenu({ onEdit, onDelete }: GameCardMenuProps) {
               setIsOpen(false);
               onDelete();
             }}
-            className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full px-4 py-2 text-left text-red-400 hover:bg-gray-800 transition-colors"
           >
             Delete
           </button>

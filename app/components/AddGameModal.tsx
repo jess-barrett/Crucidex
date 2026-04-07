@@ -29,7 +29,7 @@ const PLAY_STATUS_OPTIONS: { value: PlayStatus; label: string; description: stri
   { value: "completed", label: "Completed", description: "Accomplished main objective" },
   { value: "played", label: "Played", description: "Played (not specific)" },
   { value: "backlog", label: "Backlog", description: "Own it but haven't started" },
-  { value: "wishlist", label: "Wishlist", description: "Want to play (don't own yet)" },
+
   { value: "shelved", label: "Shelved", description: "Unfinished but could play again" },
   { value: "retired", label: "Retired", description: "No longer playing (no ending)" },
   { value: "abandoned", label: "Abandoned", description: "Unfinished and not picking back up" },
@@ -45,6 +45,7 @@ export default function AddGameModal({
   const [playtimeHours, setPlaytimeHours] = useState<string>("");
   const [rating, setRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [reviewBody, setReviewBody] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -118,6 +119,15 @@ export default function AddGameModal({
         }
         setLoading(false);
         return;
+      }
+
+      // If user wrote a review, insert it
+      if (reviewBody.trim()) {
+        await supabase.from("reviews").insert({
+          user_id: userId,
+          game_id: gameId,
+          content: reviewBody.trim(),
+        });
       }
 
       // Invalidate recommendations cache so next visit recomputes
@@ -196,7 +206,7 @@ export default function AddGameModal({
               {/* Hours Played */}
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
-                  Hours Played {playStatus === "wishlist" || playStatus === "backlog" ? "(optional)" : ""}
+                  Hours Played {playStatus === "backlog" ? "(optional)" : ""}
                 </label>
                 <input
                   type="number"
@@ -284,6 +294,20 @@ export default function AddGameModal({
                     </button>
                   )}
                 </div>
+              </div>
+
+              {/* Review (optional) */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Review (optional)
+                </label>
+                <textarea
+                  value={reviewBody}
+                  onChange={(e) => setReviewBody(e.target.value)}
+                  placeholder="Write a review..."
+                  rows={3}
+                  className="w-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#b8253d] transition-colors resize-none"
+                />
               </div>
             </div>
 

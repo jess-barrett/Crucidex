@@ -70,6 +70,7 @@ export default async function GameDetailPage({ params }: PageProps) {
             dbGame={dbGame}
             userGame={userGame}
             isLoggedIn={!!user}
+            userId={user?.id}
           />
         </div>
 
