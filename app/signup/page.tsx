@@ -89,14 +89,14 @@ export default function SignUp() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          className="bg-[#b8253d] text-white p-2 rounded hover:bg-[#8a1c2e] disabled:opacity-50"
         >
           {loading ? "Signing up..." : "Sign Up"}
         </button>
 
         <p className="text-center text-sm">
           Already have an account?{" "}
-          <a href="/login" className="text-blue-500 hover:underline">
+          <a href="/login" className="text-[#b8253d] hover:underline">
             Log in
           </a>
         </p>

@@ -80,8 +80,54 @@ export async function GET(req: NextRequest) {
     (userGamesRes.data || []).map((ug: any) => [ug.game_id, ug])
   );
 
+  // Deduplicate: when multiple events for the same game happen within 10 seconds,
+  // keep only the "highest priority" one.
+  // Priority: review_created > review_updated > game_added > game_wishlisted > rating_set > rating_changed > status_changed > hours_updated > rating_cleared > game_removed
+  const EVENT_PRIORITY: Record<string, number> = {
+    review_created: 10,
+    review_updated: 9,
+    game_added: 8,
+    game_wishlisted: 7,
+    status_changed: 6,
+    hours_updated: 5,
+    rating_set: 4,
+    rating_changed: 3,
+    rating_cleared: 2,
+    game_removed: 1,
+  };
+
+  const DEDUP_WINDOW_MS = 10_000; // 10 seconds
+
+  const deduped: typeof entries = [];
+  const seen = new Map<string, { index: number; time: number; priority: number }>();
+
+  for (const entry of entries) {
+    if (!entry.game_id) {
+      deduped.push(entry);
+      continue;
+    }
+
+    const entryTime = new Date(entry.created_at).getTime();
+    const priority = EVENT_PRIORITY[entry.event_type] ?? 0;
+    const key = entry.game_id;
+    const prev = seen.get(key);
+
+    if (prev && Math.abs(entryTime - prev.time) < DEDUP_WINDOW_MS) {
+      // Same game within the window — keep the higher priority one
+      if (priority > prev.priority) {
+        deduped[prev.index] = entry;
+        seen.set(key, { index: prev.index, time: entryTime, priority });
+      }
+      // Otherwise skip this lower-priority entry
+    } else {
+      // New window — keep this entry
+      seen.set(key, { index: deduped.length, time: entryTime, priority });
+      deduped.push(entry);
+    }
+  }
+
   // Assemble the response
-  const result = entries.map((entry) => {
+  const result = deduped.map((entry) => {
     const review = entry.review_id
       ? reviewsMap.get(entry.review_id) || null
       : null;

@@ -73,8 +73,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(requests || []);
   }
 
-  // Get accepted friends list
+  // Get accepted friends list (optionally for a specific user via ?username=)
   if (type === "list") {
+    // Determine which user's friends to fetch
+    let targetUserId = user.id;
+    if (username) {
+      const { data: targetProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", username)
+        .single();
+      if (!targetProfile) {
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
+      }
+      targetUserId = targetProfile.id;
+    }
+
     const { data: friendships, error } = await supabase
       .from("friendships")
       .select(
@@ -97,7 +111,7 @@ export async function GET(req: NextRequest) {
         )
       `
       )
-      .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+      .or(`requester_id.eq.${targetUserId},addressee_id.eq.${targetUserId}`)
       .eq("status", "accepted")
       .order("updated_at", { ascending: false });
 
@@ -108,9 +122,54 @@ export async function GET(req: NextRequest) {
     // Map to return the "other" user as the friend
     const friends = (friendships || []).map((f: any) => ({
       friendshipId: f.id,
-      friend: f.requester_id === user.id ? f.addressee : f.requester,
+      friend: f.requester_id === targetUserId ? f.addressee : f.requester,
       since: f.created_at,
     }));
+
+    // Enrich with stats (game count + total hours + friend count per friend)
+    const friendIds = friends.map((f: any) => f.friend.id);
+
+    if (friendIds.length > 0) {
+      // Batch fetch user_games for all friends
+      const { data: allUserGames } = await supabase
+        .from("user_games")
+        .select("user_id, playtime_hours, play_status")
+        .in("user_id", friendIds);
+
+      // Batch fetch friend counts for all friends
+      const { data: allFriendships } = await supabase
+        .from("friendships")
+        .select("requester_id, addressee_id")
+        .eq("status", "accepted")
+        .or(
+          friendIds
+            .map((id: string) => `requester_id.eq.${id},addressee_id.eq.${id}`)
+            .join(",")
+        );
+
+      // Build stats per friend
+      const statsMap = new Map<string, { games: number; hours: number; friends: number }>();
+
+      for (const id of friendIds) {
+        const games = (allUserGames || []).filter(
+          (ug: any) => ug.user_id === id && ug.play_status !== "wishlist"
+        );
+        const hours = Math.round(
+          games.reduce((s: number, g: any) => s + (g.playtime_hours || 0), 0)
+        );
+        const friendCount = (allFriendships || []).filter(
+          (f: any) => f.requester_id === id || f.addressee_id === id
+        ).length;
+
+        statsMap.set(id, { games: games.length, hours, friends: friendCount });
+      }
+
+      // Attach stats
+      for (const f of friends) {
+        const s = statsMap.get(f.friend.id);
+        (f as any).stats = s || { games: 0, hours: 0, friends: 0 };
+      }
+    }
 
     return NextResponse.json(friends);
   }

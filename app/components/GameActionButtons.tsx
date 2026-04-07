@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-client";
 import AddGameModal from "./AddGameModal";
+import EditGameModal from "./EditGameModal";
+import Toast from "./Toast";
 
 interface GameActionButtonsProps {
   igdbGame: any;
@@ -22,6 +24,8 @@ export default function GameActionButtons({
 }: GameActionButtonsProps) {
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [wishlisted, setWishlisted] = useState(false);
   const [showWishlistText, setShowWishlistText] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
@@ -135,12 +139,24 @@ export default function GameActionButtons({
 
   // Handler for editing existing library entry
   const handleEdit = () => {
-    alert("Edit functionality coming soon!");
+    setShowEditModal(true);
   };
 
-  // Handler for adding to Top 4
-  const handleAddToTopFour = () => {
-    alert("Top 4 functionality coming soon!");
+  // Handler for saving edit
+  const handleEditSave = async (hours: number, rating: number | null, playStatus: string) => {
+    const { error } = await supabase
+      .from("user_games")
+      .update({ playtime_hours: hours, rating, play_status: playStatus })
+      .eq("id", userGame.id);
+
+    if (!error) {
+      fetch("/api/recommendations", { method: "DELETE" }).catch(() => {});
+      setShowEditModal(false);
+      setToast({ message: "Game updated!", type: "success" });
+      router.refresh();
+    } else {
+      setToast({ message: "Failed to update", type: "error" });
+    }
   };
 
   // Is this game in library (not just wishlisted)?
@@ -178,14 +194,6 @@ export default function GameActionButtons({
           >
             Edit
           </button>
-          {!userGame.top_four_position && (
-            <button
-              onClick={handleAddToTopFour}
-              className="bg-[#00C853] text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
-            >
-              ⭐ Add to Top 4
-            </button>
-          )}
         </div>
       ) : (
         // Not in library - show Add button + Wishlist button
@@ -226,6 +234,35 @@ export default function GameActionButtons({
             </span>
           </button>
         </div>
+      )}
+
+      {/* Edit Game Modal */}
+      {showEditModal && inLibrary && (
+        <EditGameModal
+          game={{
+            ...userGame,
+            games: {
+              id: dbGame?.id || "",
+              title: igdbGame.name,
+              cover_url: igdbGame.cover?.url
+                ? `https:${igdbGame.cover.url.replace("t_thumb", "t_cover_big")}`
+                : null,
+            },
+          }}
+          onSave={(hours, rating, playStatus) =>
+            handleEditSave(hours, rating, playStatus)
+          }
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
 
       {/* Add Game Modal */}

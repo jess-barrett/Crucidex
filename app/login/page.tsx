@@ -80,14 +80,14 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          className="bg-[#b8253d] text-white p-2 rounded hover:bg-[#8a1c2e] disabled:opacity-50"
         >
           {loading ? "Logging in..." : "Log In"}
         </button>
 
         <p className="text-center text-sm">
           Don't have an account?{" "}
-          <a href="/signup" className="text-blue-500 hover:underline">
+          <a href="/signup" className="text-[#b8253d] hover:underline">
             Sign up
           </a>
         </p>

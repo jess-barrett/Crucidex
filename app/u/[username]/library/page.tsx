@@ -108,6 +108,7 @@ export default function LibraryPage() {
            games (id, igdb_id, title, cover_url, igdb_rating, genres, game_modes)`
         )
         .eq("user_id", profileData.id)
+        .neq("play_status", "wishlist")
         .order("added_at", { ascending: false }),
 
       supabase.from("genres").select("id, name").order("name"),
@@ -329,39 +330,31 @@ export default function LibraryPage() {
         <ProfileNavBar username={username} />
 
         {/* ── Library Controls ── */}
-        <div>
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <i className="fa-solid fa-gamepad text-[#b8253d]"></i>
-              Library ({displayedLibrary.length}
-              {displayedLibrary.length !== library.length &&
-                ` of ${library.length}`}
-              )
-            </h2>
-            {isOwnProfile && (
-              <button
-                onClick={() => setShowSearchModal(true)}
-                className="text-[#b8253d] hover:text-[#8a1c2e] text-sm font-medium transition-colors"
-              >
-                + Add games
-              </button>
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            {library.length > 0 && (
+              <LibraryControls
+                sortOption={sortOption}
+                onSortChange={setSortOption}
+                hoursFilter={hoursFilter}
+                onHoursFilterChange={setHoursFilter}
+                genreFilter={genreFilter}
+                onGenreFilterChange={setGenreFilter}
+                modeFilter={modeFilter}
+                onModeFilterChange={setModeFilter}
+                playStatusFilter={playStatusFilter}
+                onPlayStatusFilterChange={setPlayStatusFilter}
+                availableGenres={genresInLibrary}
+              />
             )}
           </div>
-
-          {library.length > 0 && (
-            <LibraryControls
-              sortOption={sortOption}
-              onSortChange={setSortOption}
-              hoursFilter={hoursFilter}
-              onHoursFilterChange={setHoursFilter}
-              genreFilter={genreFilter}
-              onGenreFilterChange={setGenreFilter}
-              modeFilter={modeFilter}
-              onModeFilterChange={setModeFilter}
-              playStatusFilter={playStatusFilter}
-              onPlayStatusFilterChange={setPlayStatusFilter}
-              availableGenres={genresInLibrary}
-            />
+          {isOwnProfile && (
+            <button
+              onClick={() => setShowSearchModal(true)}
+              className="text-[#b8253d] hover:text-[#8a1c2e] text-sm font-medium transition-colors flex-shrink-0"
+            >
+              + Add games
+            </button>
           )}
         </div>
 

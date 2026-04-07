@@ -63,7 +63,7 @@ export default function LibraryControls({
   ].filter(Boolean).length;
 
   return (
-    <div className="mb-4 space-y-3">
+    <div className="space-y-3">
       {/* Sort and Filter Toggle Row */}
       <div className="flex items-center gap-3 flex-wrap">
         <select

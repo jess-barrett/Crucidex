@@ -3,6 +3,16 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-client";
+import ProfileNavBar from "@/app/components/ProfileNavBar";
+
+interface Profile {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+  bio: string | null;
+  created_at: string;
+}
 
 interface Friend {
   friendshipId: string;
@@ -13,42 +23,183 @@ interface Friend {
     avatar_url: string | null;
   };
   since: string;
+  stats: {
+    games: number;
+    hours: number;
+    friends: number;
+  };
 }
+
+interface SearchResult {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar_url: string | null;
+}
+
+type Tab = "friends" | "requests" | "add";
 
 export default function FriendsPage() {
   const params = useParams();
   const username = params.username as string;
+
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [pendingReceived, setPendingReceived] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [friendsCount, setFriendsCount] = useState(0);
+  const [gameCount, setGameCount] = useState(0);
+  const [totalHours, setTotalHours] = useState(0);
+  const [tab, setTab] = useState<Tab>("friends");
+
+  // Add friend search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [sendingTo, setSendingTo] = useState<string | null>(null);
+  const [sentTo, setSentTo] = useState<Set<string>>(new Set());
+
   const supabase = createClient();
 
-  useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("username", username)
-        .single();
+  async function loadData() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-      if (profile && user?.id === profile.id) {
-        setIsOwnProfile(true);
-      }
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("username", username)
+      .single();
 
-      // Fetch friends list
-      if (user) {
-        const res = await fetch("/api/friends?type=list");
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setFriends(data);
-        }
-      }
-
+    if (!profileData) {
       setLoading(false);
+      return;
     }
-    load();
+
+    setProfile(profileData);
+    const isOwner = user?.id === profileData.id;
+    setIsOwnProfile(isOwner);
+
+    const [friendsRes, libraryRes, pendingRes] = await Promise.all([
+      fetch(
+        `/api/friends?type=list&username=${encodeURIComponent(username)}`
+      ).then((r) => r.json()),
+
+      supabase
+        .from("user_games")
+        .select("playtime_hours, play_status")
+        .eq("user_id", profileData.id),
+
+      isOwner
+        ? fetch("/api/friends?type=pending").then((r) => r.json())
+        : Promise.resolve([]),
+    ]);
+
+    if (Array.isArray(friendsRes)) {
+      setFriends(friendsRes);
+      setFriendsCount(friendsRes.length);
+    }
+
+    if (libraryRes.data) {
+      const nonWishlist = libraryRes.data.filter(
+        (g: any) => g.play_status !== "wishlist"
+      );
+      setGameCount(nonWishlist.length);
+      setTotalHours(
+        Math.round(
+          nonWishlist.reduce(
+            (s: number, g: any) => s + (g.playtime_hours || 0),
+            0
+          )
+        )
+      );
+    }
+
+    if (Array.isArray(pendingRes)) {
+      setPendingReceived(pendingRes);
+    }
+
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadData();
   }, [username]);
+
+  // Search for users
+  async function handleSearch(query: string) {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+      .neq("username", username) // exclude self
+      .limit(10);
+
+    setSearchResults(data || []);
+    setSearching(false);
+  }
+
+  async function handleSendRequest(targetUsername: string) {
+    setSendingTo(targetUsername);
+    const res = await fetch("/api/friends", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: targetUsername }),
+    });
+    if (res.ok) {
+      setSentTo((prev) => new Set(prev).add(targetUsername));
+    }
+    setSendingTo(null);
+  }
+
+  async function handleUnfriend(friendshipId: string) {
+    setActionLoading(friendshipId);
+    await fetch("/api/friends", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ friendshipId }),
+    });
+    setFriends((prev) => prev.filter((f) => f.friendshipId !== friendshipId));
+    setFriendsCount((c) => c - 1);
+    setActionLoading(null);
+  }
+
+  async function handleAccept(friendshipId: string) {
+    setActionLoading(friendshipId);
+    await fetch("/api/friends", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ friendshipId, action: "accept" }),
+    });
+    setActionLoading(null);
+    loadData();
+  }
+
+  async function handleDecline(friendshipId: string) {
+    setActionLoading(friendshipId);
+    await fetch("/api/friends", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ friendshipId, action: "decline" }),
+    });
+    setPendingReceived((prev) => prev.filter((r) => r.id !== friendshipId));
+    setActionLoading(null);
+  }
+
+  // Check if a search result is already a friend
+  function isFriend(userId: string) {
+    return friends.some((f) => f.friend.id === userId);
+  }
 
   if (loading) {
     return (
@@ -58,47 +209,382 @@ export default function FriendsPage() {
     );
   }
 
+  if (!profile) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2 text-white">User Not Found</h1>
+          <p className="text-gray-500">@{username} does not exist.</p>
+        </div>
+      </main>
+    );
+  }
+
+  const TABS: { key: Tab; label: string; count?: number }[] = [
+    { key: "friends", label: "Friends", count: friendsCount },
+    ...(isOwnProfile
+      ? [
+          {
+            key: "requests" as Tab,
+            label: "Requests",
+            count: pendingReceived.length,
+          },
+          { key: "add" as Tab, label: "Add a Friend" },
+        ]
+      : []),
+  ];
+
   return (
     <main className="min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-2xl font-bold text-white mb-6">Friends</h1>
-
-        {friends.length === 0 ? (
-          <div className="bg-gray-800/50 rounded-xl p-12 text-center">
-            <i className="fa-solid fa-user-group text-4xl text-gray-600 mb-4"></i>
-            <p className="text-gray-400">No friends yet. Visit other profiles to send friend requests!</p>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* ── Row 1: User Info + Stats ── */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center text-2xl overflow-hidden flex-shrink-0 ring-2 ring-[#b8253d]/30">
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.display_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-white font-bold">
+                  {profile.display_name.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                {profile.display_name}
+              </h1>
+              <p className="text-gray-400 text-sm">@{profile.username}</p>
+            </div>
           </div>
-        ) : (
-          <div className="grid gap-3">
-            {friends.map((f) => (
-              <a
-                key={f.friendshipId}
-                href={`/u/${f.friend.username}`}
-                className="flex items-center gap-4 bg-gray-800/50 rounded-lg p-4 hover:bg-gray-800 transition-colors border border-gray-700/50"
-              >
-                <div className="w-12 h-12 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {f.friend.avatar_url ? (
-                    <img
-                      src={f.friend.avatar_url}
-                      alt={f.friend.display_name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-white font-bold">
-                      {f.friend.display_name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white">{f.friend.display_name}</p>
-                  <p className="text-sm text-gray-400">@{f.friend.username}</p>
-                </div>
-                <p className="text-xs text-gray-500">
-                  Friends since {new Date(f.since).toLocaleDateString()}
+
+          <div className="flex items-center gap-8">
+            {[
+              { value: gameCount, label: "Games" },
+              { value: totalHours, label: "Hours" },
+              { value: friendsCount, label: "Friends" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center">
+                <p className="text-xl font-bold text-white">{stat.value}</p>
+                <p className="text-xs text-gray-400 uppercase tracking-wide">
+                  {stat.label}
                 </p>
-              </a>
+              </div>
             ))}
           </div>
+        </div>
+
+        {/* ── Row 2: Nav Bar ── */}
+        <ProfileNavBar username={username} />
+
+        {/* ── Tab Bar ── */}
+        <div className="flex gap-6 border-b border-gray-700">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`pb-3 text-sm font-medium transition-colors relative ${
+                tab === t.key
+                  ? "text-[#b8253d]"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              {t.label}
+              {t.count != null && t.count > 0 && (
+                <span
+                  className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                    tab === t.key
+                      ? "bg-[#b8253d]/20 text-[#b8253d]"
+                      : "bg-gray-700 text-gray-400"
+                  }`}
+                >
+                  {t.count}
+                </span>
+              )}
+              {tab === t.key && (
+                <span className="absolute bottom-0 left-[12.5%] right-[12.5%] h-[2px] bg-[#b8253d]" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Tab: Friends ── */}
+        {tab === "friends" && (
+          <section>
+            {friends.length === 0 ? (
+              <div className="py-12 text-center">
+                <i className="fa-solid fa-user-group text-4xl text-gray-600 mb-4"></i>
+                <p className="text-gray-400">
+                  No friends yet.{" "}
+                  {isOwnProfile && (
+                    <button
+                      onClick={() => setTab("add")}
+                      className="text-[#b8253d] hover:underline"
+                    >
+                      Add some friends!
+                    </button>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Header row */}
+                <div className="flex items-center px-1 pb-2 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-700/50">
+                  <span className="flex-1">Name</span>
+                  <span className="w-20 text-center">Games</span>
+                  <span className="w-20 text-center">Hours</span>
+                  <span className="w-20 text-center">Friends</span>
+                  {isOwnProfile && <span className="w-24"></span>}
+                </div>
+
+                <div className="divide-y divide-gray-700/50">
+                  {friends.map((f) => (
+                    <div
+                      key={f.friendshipId}
+                      className="flex items-center py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                    >
+                      <a
+                        href={`/u/${f.friend.username}`}
+                        className="w-10 h-10 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                      >
+                        {f.friend.avatar_url ? (
+                          <img
+                            src={f.friend.avatar_url}
+                            alt={f.friend.display_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-white font-bold text-sm">
+                            {f.friend.display_name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </a>
+
+                      <div className="ml-3 flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2">
+                          <a
+                            href={`/u/${f.friend.username}`}
+                            className="text-white font-medium text-sm hover:text-[#b8253d] transition-colors"
+                          >
+                            {f.friend.username}
+                          </a>
+                          <span className="text-gray-500 text-xs truncate">
+                            {f.friend.display_name}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {f.stats?.friends || 0} friends
+                        </p>
+                      </div>
+
+                      <span className="w-20 text-center text-sm text-gray-300">
+                        {f.stats?.games || 0}
+                      </span>
+                      <span className="w-20 text-center text-sm text-gray-300">
+                        {f.stats?.hours || 0}
+                      </span>
+                      <span className="w-20 text-center text-sm text-gray-300">
+                        {f.stats?.friends || 0}
+                      </span>
+
+                      {isOwnProfile && (
+                        <div className="w-24 flex justify-end">
+                          <button
+                            onClick={() => handleUnfriend(f.friendshipId)}
+                            disabled={actionLoading === f.friendshipId}
+                            className="px-3 py-1.5 bg-gray-700 hover:bg-red-900/50 hover:text-red-400 text-gray-400 rounded text-xs font-medium transition-colors disabled:opacity-50"
+                          >
+                            Unfriend
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
+        {/* ── Tab: Requests ── */}
+        {tab === "requests" && isOwnProfile && (
+          <section>
+            {pendingReceived.length === 0 ? (
+              <div className="py-12 text-center">
+                <i className="fa-solid fa-envelope text-4xl text-gray-600 mb-4"></i>
+                <p className="text-gray-400">No pending friend requests</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-700/50">
+                {pendingReceived.map((req: any) => (
+                  <div
+                    key={req.id}
+                    className="flex items-center py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                  >
+                    <a
+                      href={`/u/${req.requester.username}`}
+                      className="w-10 h-10 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                    >
+                      {req.requester.avatar_url ? (
+                        <img
+                          src={req.requester.avatar_url}
+                          alt={req.requester.display_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-white font-bold text-sm">
+                          {req.requester.display_name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </a>
+
+                    <div className="ml-3 flex-1 min-w-0">
+                      <div className="flex items-baseline gap-2">
+                        <a
+                          href={`/u/${req.requester.username}`}
+                          className="text-white font-medium text-sm hover:text-[#b8253d] transition-colors"
+                        >
+                          {req.requester.username}
+                        </a>
+                        <span className="text-gray-500 text-xs truncate">
+                          {req.requester.display_name}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 ml-4">
+                      <button
+                        onClick={() => handleAccept(req.id)}
+                        disabled={actionLoading === req.id}
+                        className="px-3 py-1.5 bg-[#b8253d] hover:bg-[#8a1c2e] text-white rounded text-xs font-medium transition-colors disabled:opacity-50"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => handleDecline(req.id)}
+                        disabled={actionLoading === req.id}
+                        className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded text-xs font-medium transition-colors disabled:opacity-50"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Tab: Add a Friend ── */}
+        {tab === "add" && isOwnProfile && (
+          <section>
+            {/* Search input */}
+            <div className="relative mb-4">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search by username or display name..."
+                className="w-full bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 px-4 py-2.5 rounded-lg focus:outline-none focus:border-[#b8253d] transition-colors"
+              />
+              <i className="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+
+            {/* Results */}
+            {searching && (
+              <p className="text-gray-400 text-sm text-center py-4">
+                Searching...
+              </p>
+            )}
+
+            {!searching && searchQuery && searchResults.length === 0 && (
+              <p className="text-gray-400 text-sm text-center py-4">
+                No users found
+              </p>
+            )}
+
+            {!searching && searchResults.length > 0 && (
+              <div className="divide-y divide-gray-700/50">
+                {searchResults.map((user) => {
+                  const alreadyFriend = isFriend(user.id);
+                  const alreadySent = sentTo.has(user.username);
+                  const isSending = sendingTo === user.username;
+
+                  return (
+                    <div
+                      key={user.id}
+                      className="flex items-center py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                    >
+                      <a
+                        href={`/u/${user.username}`}
+                        className="w-10 h-10 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
+                      >
+                        {user.avatar_url ? (
+                          <img
+                            src={user.avatar_url}
+                            alt={user.display_name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-white font-bold text-sm">
+                            {user.display_name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </a>
+
+                      <div className="ml-3 flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2">
+                          <a
+                            href={`/u/${user.username}`}
+                            className="text-white font-medium text-sm hover:text-[#b8253d] transition-colors"
+                          >
+                            {user.username}
+                          </a>
+                          <span className="text-gray-500 text-xs truncate">
+                            {user.display_name}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="ml-4">
+                        {alreadyFriend ? (
+                          <span className="text-xs text-gray-500 px-3 py-1.5">
+                            <i className="fa-solid fa-check mr-1"></i>
+                            Friends
+                          </span>
+                        ) : alreadySent ? (
+                          <span className="text-xs text-gray-500 px-3 py-1.5">
+                            <i className="fa-solid fa-clock mr-1"></i>
+                            Request Sent
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleSendRequest(user.username)}
+                            disabled={isSending}
+                            className="px-3 py-1.5 bg-[#b8253d] hover:bg-[#8a1c2e] text-white rounded text-xs font-medium transition-colors disabled:opacity-50"
+                          >
+                            {isSending ? "Sending..." : "Add Friend"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {!searchQuery && (
+              <div className="py-12 text-center">
+                <i className="fa-solid fa-user-plus text-4xl text-gray-600 mb-4"></i>
+                <p className="text-gray-400">
+                  Search for users by username or display name
+                </p>
+              </div>
+            )}
+          </section>
         )}
       </div>
     </main>

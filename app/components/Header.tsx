@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import SearchGameModal from "./SearchGameModal";
 import AddGameModal from "./AddGameModal";
-import FriendRequestsDropdown from "./FriendRequestsDropdown";
 import Toast from "./Toast";
 
 interface Game {
@@ -30,6 +29,7 @@ export default function Header() {
   const [username, setUsername] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Game[]>([]);
+  const [userResults, setUserResults] = useState<{ id: string; username: string; display_name: string; avatar_url: string | null }[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [searching, setSearching] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -38,6 +38,7 @@ export default function Header() {
     message: string;
     type: "success" | "error";
   } | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -57,8 +58,17 @@ export default function Header() {
         if (profileData) {
           setUsername(profileData.username);
         }
+
+        // Fetch pending friend request count
+        fetch("/api/friends?type=pending")
+          .then((r) => r.json())
+          .then((d) => {
+            if (Array.isArray(d)) setPendingCount(d.length);
+          })
+          .catch(() => {});
       } else {
         setUsername(null);
+        setPendingCount(0);
       }
     }
 
@@ -111,6 +121,7 @@ export default function Header() {
     setSearchQuery(query);
     if (!query.trim()) {
       setSearchResults([]);
+      setUserResults([]);
       setShowResults(false);
       return;
     }
@@ -118,11 +129,19 @@ export default function Header() {
     setSearching(true);
     setShowResults(true);
     try {
-      const response = await fetch(
-        `/api/games/search?q=${encodeURIComponent(query)}`,
-      );
-      const data = await response.json();
-      setSearchResults(data.slice(0, 5)); // Show only top 5 results
+      // Search games and users in parallel
+      const [gamesResponse, usersResponse] = await Promise.all([
+        fetch(`/api/games/search?q=${encodeURIComponent(query)}`),
+        supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url")
+          .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+          .limit(3),
+      ]);
+
+      const gamesData = await gamesResponse.json();
+      setSearchResults(gamesData.slice(0, 5));
+      setUserResults(usersResponse.data || []);
     } catch (error) {
       console.error("Search error:", error);
     } finally {
@@ -181,7 +200,7 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
                 onFocus={() => searchQuery && setShowResults(true)}
-                placeholder="Search games..."
+                placeholder="Search games or users..."
                 className="w-full bg-gray-800/50 border border-gray-600 text-white placeholder-gray-400 px-4 py-2 rounded-lg focus:outline-none focus:border-[#b8253d] transition-colors"
               />
               <i className="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
@@ -194,42 +213,96 @@ export default function Header() {
                   <div className="p-4 text-center text-gray-400">
                     Searching...
                   </div>
-                ) : searchResults.length > 0 ? (
-                  searchResults.map((game) => (
-                    <button
-                      key={game.id}
-                      onClick={() => handleGameClick(game.id)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700 last:border-b-0"
-                    >
-                      {getCoverUrl(game) ? (
-                        <img
-                          src={getCoverUrl(game)}
-                          alt={game.name}
-                          className="w-12 h-16 object-cover rounded"
-                        />
-                      ) : (
-                        <div className="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
-                          <i className="fa-solid fa-gamepad text-gray-500"></i>
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-white truncate">
-                          {game.name}
-                        </p>
-                        {game.first_release_date && (
-                          <p className="text-sm text-gray-400">
-                            {new Date(
-                              game.first_release_date * 1000,
-                            ).getFullYear()}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                  ))
-                ) : (
+                ) : searchResults.length === 0 && userResults.length === 0 ? (
                   <div className="p-4 text-center text-gray-400">
                     No results found
                   </div>
+                ) : (
+                  <>
+                    {/* User Results */}
+                    {userResults.length > 0 && (
+                      <>
+                        <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+                          Users
+                        </div>
+                        {userResults.map((u) => (
+                          <button
+                            key={u.id}
+                            onClick={() => {
+                              setShowResults(false);
+                              setSearchQuery("");
+                              setSearchResults([]);
+                              setUserResults([]);
+                              router.push(`/u/${u.username}/profile`);
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-b-0"
+                          >
+                            <div className="w-8 h-8 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                              {u.avatar_url ? (
+                                <img
+                                  src={u.avatar_url}
+                                  alt={u.display_name}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-white font-bold text-xs">
+                                  {u.display_name.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-white text-sm truncate">
+                                {u.username}
+                              </p>
+                              <p className="text-xs text-gray-400 truncate">
+                                {u.display_name}
+                              </p>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Game Results */}
+                    {searchResults.length > 0 && (
+                      <>
+                        <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-500 font-semibold">
+                          Games
+                        </div>
+                        {searchResults.map((game) => (
+                          <button
+                            key={game.id}
+                            onClick={() => handleGameClick(game.id)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-gray-700/50 transition-colors text-left border-b border-gray-700/50 last:border-b-0"
+                          >
+                            {getCoverUrl(game) ? (
+                              <img
+                                src={getCoverUrl(game)}
+                                alt={game.name}
+                                className="w-12 h-16 object-cover rounded"
+                              />
+                            ) : (
+                              <div className="w-12 h-16 bg-gray-700 rounded flex items-center justify-center">
+                                <i className="fa-solid fa-gamepad text-gray-500"></i>
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-white truncate">
+                                {game.name}
+                              </p>
+                              {game.first_release_date && (
+                                <p className="text-sm text-gray-400">
+                                  {new Date(
+                                    game.first_release_date * 1000,
+                                  ).getFullYear()}
+                                </p>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -249,9 +322,6 @@ export default function Header() {
                   Add Game
                 </span>
               </button>
-
-              {/* Friend Requests */}
-              <FriendRequestsDropdown />
 
               {/* Username Dropdown */}
               <div className="relative group/nav">
@@ -297,6 +367,11 @@ export default function Header() {
                     >
                       <i className="fa-solid fa-user-group w-4 text-center text-xs"></i>
                       Friends
+                      {pendingCount > 0 && (
+                        <span className="bg-[#b8253d] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ml-auto">
+                          {pendingCount}
+                        </span>
+                      )}
                     </a>
                     <a
                       href={username ? `/u/${username}/reviews` : "#"}
