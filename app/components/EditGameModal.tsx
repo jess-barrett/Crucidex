@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase-client";
 import type { PlayStatus } from "@/lib/types";
 
 interface UserGame {
@@ -17,6 +18,7 @@ interface UserGame {
 
 interface EditGameModalProps {
   game: UserGame;
+  userId: string;
   onSave: (hours: number, rating: number | null, playStatus: PlayStatus) => void;
   onClose: () => void;
 }
@@ -32,15 +34,40 @@ const PLAY_STATUS_OPTIONS: { value: PlayStatus; label: string; description: stri
   { value: "abandoned", label: "Abandoned", description: "Unfinished and not picking back up" },
 ];
 
-export default function EditGameModal({ game, onSave, onClose }: EditGameModalProps) {
+export default function EditGameModal({ game, userId, onSave, onClose }: EditGameModalProps) {
   const [playtimeHours, setPlaytimeHours] = useState<string>(
     game.playtime_hours.toString()
   );
   const [rating, setRating] = useState<number | null>(game.rating);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [playStatus, setPlayStatus] = useState<PlayStatus>(game.play_status ?? "played");
+  const [reviewBody, setReviewBody] = useState<string>("");
+  const [existingReviewId, setExistingReviewId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const supabase = createClient();
+
+  // Fetch existing review on mount
+  useEffect(() => {
+    async function fetchReview() {
+      // Get authenticated user ID
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
+      const { data } = await supabase
+        .from("reviews")
+        .select("id, content")
+        .eq("user_id", authUser.id)
+        .eq("game_id", game.games.id)
+        .maybeSingle();
+
+      if (data) {
+        setReviewBody(data.content || "");
+        setExistingReviewId(data.id);
+      }
+    }
+    fetchReview();
+  }, [game.games.id]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -61,10 +88,71 @@ export default function EditGameModal({ game, onSave, onClose }: EditGameModalPr
     }
 
     try {
+      // Handle review update/create/delete FIRST
+      const trimmedReview = reviewBody.trim();
+
+      if (trimmedReview) {
+        // User has written a review - upsert it
+        if (existingReviewId) {
+          // Update existing review
+          console.log("Updating review:", existingReviewId);
+          const { error: reviewError } = await supabase
+            .from("reviews")
+            .update({ content: trimmedReview })
+            .eq("id", existingReviewId);
+
+          if (reviewError) {
+            console.error("Review update error:", reviewError);
+            throw new Error(`Failed to update review: ${reviewError.message}`);
+          }
+          console.log("Review updated successfully");
+        } else {
+          // Create new review
+          console.log("Creating new review for game:", game.games.id);
+
+          // Get the authenticated user's ID directly
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+
+          if (!authUser) {
+            throw new Error("Not authenticated");
+          }
+
+          console.log("Using auth user ID:", authUser.id);
+
+          const { data, error: reviewError } = await supabase.from("reviews").insert({
+            user_id: authUser.id,  // Use auth user ID instead of userId prop
+            game_id: game.games.id,
+            content: trimmedReview,
+          }).select();
+
+          if (reviewError) {
+            console.error("Review creation error:", reviewError);
+            throw new Error(`Failed to create review: ${reviewError.message}`);
+          }
+          console.log("Review created successfully:", data);
+        }
+      } else if (existingReviewId) {
+        // User cleared the review - delete it
+        console.log("Deleting review:", existingReviewId);
+        const { error: reviewError } = await supabase
+          .from("reviews")
+          .delete()
+          .eq("id", existingReviewId);
+
+        if (reviewError) {
+          console.error("Review deletion error:", reviewError);
+          throw new Error(`Failed to delete review: ${reviewError.message}`);
+        }
+        console.log("Review deleted successfully");
+      }
+
+      // Save game details after review is saved
       await onSave(hours, rating, playStatus);
-    } catch (err) {
-      setError("Failed to save changes");
+    } catch (err: any) {
+      console.error("Error saving game/review:", err);
+      setError(err.message || "Failed to save changes");
       setLoading(false);
+      throw err; // Re-throw to prevent modal from closing
     }
   }
 
@@ -209,6 +297,20 @@ export default function EditGameModal({ game, onSave, onClose }: EditGameModalPr
                     </button>
                   )}
                 </div>
+              </div>
+
+              {/* Review (optional) */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Review (optional)
+                </label>
+                <textarea
+                  value={reviewBody}
+                  onChange={(e) => setReviewBody(e.target.value)}
+                  placeholder="Write a review..."
+                  rows={3}
+                  className="w-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#b8253d] transition-colors resize-none"
+                />
               </div>
             </div>
 

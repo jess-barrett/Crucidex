@@ -355,6 +355,7 @@ export default function ProfileView({
       {isOwnProfile && editingGame && (
         <EditGameModal
           game={editingGame}
+          userId={profile.id}
           onSave={(hours, rating, playStatus) =>
             handleEditSave(editingGame.id, hours, rating, playStatus)
           }
