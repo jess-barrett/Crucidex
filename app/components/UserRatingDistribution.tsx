@@ -1,11 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-
-interface UserGame {
-  id: string;
-  rating: number | null;
-}
+import type { UserGame } from "@/lib/types";
 
 interface UserRatingDistributionProps {
   library: UserGame[];

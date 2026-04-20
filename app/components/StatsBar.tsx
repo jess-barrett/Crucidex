@@ -1,20 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  games: {
-    genres: number[] | null;
-  };
-}
-
-interface Genre {
-  id: number;
-  name: string;
-}
+import type { UserGame, Genre } from "@/lib/types";
 
 interface StatsBarProps {
   library: UserGame[];

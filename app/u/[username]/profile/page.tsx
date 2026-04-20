@@ -7,31 +7,7 @@ import Link from "next/link";
 import ProfileNavBar from "@/app/components/ProfileNavBar";
 import ReviewCard from "@/app/components/ReviewCard";
 import SelectGameModal from "@/app/components/SelectGameModal";
-
-interface Profile {
-  id: string;
-  username: string;
-  display_name: string;
-  avatar_url: string | null;
-  bio: string | null;
-  created_at: string;
-}
-
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  top_four_position: number | null;
-  play_status: string | null;
-  added_at: string;
-  last_played_at: string | null;
-  games: {
-    id: string;
-    igdb_id: number;
-    title: string;
-    cover_url: string | null;
-  };
-}
+import type { UserGame, Profile } from "@/lib/types";
 
 interface Review {
   id: string;
@@ -615,7 +591,9 @@ export default function ProfilePage() {
       {/* Select Game Modal for Top 4 */}
       {selectingPosition !== null && (
         <SelectGameModal
+          position={selectingPosition}
           library={library}
+          excludeIds={topFour.map((g) => g.games?.id || "")}
           onSelect={(gameId) =>
             handleSelectTopFour(gameId, selectingPosition!)
           }

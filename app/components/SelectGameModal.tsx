@@ -1,16 +1,6 @@
 "use client";
 
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  top_four_position: number | null;
-  games: {
-    id: string;
-    title: string;
-    cover_url: string | null;
-  };
-}
+import type { UserGame } from "@/lib/types";
 
 interface SelectGameModalProps {
   position: number;

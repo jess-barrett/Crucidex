@@ -16,39 +16,7 @@ import ConfirmDeleteModal from "@/app/components/ConfirmDeleteModal";
 import SearchGameModal from "@/app/components/SearchGameModal";
 import AddGameModal from "@/app/components/AddGameModal";
 import Toast from "@/app/components/Toast";
-
-interface Profile {
-  id: string;
-  username: string;
-  display_name: string;
-  avatar_url: string | null;
-  bio: string | null;
-  created_at: string;
-}
-
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  top_four_position: number | null;
-  play_status: string | null;
-  added_at?: string;
-  last_played_at?: string;
-  games: {
-    id: string;
-    igdb_id: number;
-    title: string;
-    cover_url: string | null;
-    igdb_rating: number | null;
-    genres: number[] | null;
-    game_modes: number[] | null;
-  };
-}
-
-interface Genre {
-  id: number;
-  name: string;
-}
+import type { UserGame, Profile, Genre } from "@/lib/types";
 
 export default function LibraryPage() {
   const params = useParams();

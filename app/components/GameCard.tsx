@@ -2,21 +2,7 @@
 
 import Link from "next/link";
 import GameCardMenu from "./GameCardMenu";
-import type { PlayStatus } from "@/lib/types";
-
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  top_four_position: number | null;
-  play_status: PlayStatus | null;
-  games: {
-    id: string;
-    igdb_id: number;
-    title: string;
-    cover_url: string | null;
-  };
-}
+import type { PlayStatus, UserGame } from "@/lib/types";
 
 interface GameCardProps {
   item: UserGame;

@@ -2,19 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-client";
-import type { PlayStatus } from "@/lib/types";
-
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  play_status: PlayStatus | null;
-  games: {
-    id: string;
-    title: string;
-    cover_url: string | null;
-  };
-}
+import type { PlayStatus, UserGame } from "@/lib/types";
 
 interface EditGameModalProps {
   game: UserGame;
