@@ -30,7 +30,7 @@ export default function MarketingPage() {
       {/* Hero Section with Fade */}
       <section className="relative h-[400px] bg-gradient-to-b from-gray-800 to-background overflow-hidden">
         <img
-          src="/images/homepage/Crucidex-Hero.png"
+          src="/images/homepage/Crucidex-Hero.PNG"
           alt="Crucidex Hero"
           className="w-full h-full object-cover"
         />
