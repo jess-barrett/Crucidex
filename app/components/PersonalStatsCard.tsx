@@ -141,15 +141,34 @@ export default function PersonalStatsCard({
 
       {/* Stats Grid - 2 rows x 4 columns */}
       <div className="grid grid-cols-4 gap-4">
-        {statItems.map((stat) => (
-          <div key={stat.label} className="text-center">
-            <i
-              className={`${stat.icon} text-[#b8253d] text-2xl mb-2 block`}
-            ></i>
-            <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
-            <p className="text-xs text-gray-400">{stat.label}</p>
-          </div>
-        ))}
+        {statItems.map((stat) => {
+          const valueStr = String(stat.value);
+          // Scale font down for long text (e.g. long genre names)
+          const valueSize =
+            valueStr.length > 12
+              ? "text-sm"
+              : valueStr.length > 9
+              ? "text-base"
+              : valueStr.length > 7
+              ? "text-lg"
+              : valueStr.length > 5
+              ? "text-xl"
+              : "text-2xl";
+          return (
+            <div key={stat.label} className="text-center min-w-0">
+              <i
+                className={`${stat.icon} text-[#b8253d] text-2xl mb-2 block`}
+              ></i>
+              <p
+                className={`${valueSize} font-bold text-white mb-1 truncate`}
+                title={valueStr}
+              >
+                {stat.value}
+              </p>
+              <p className="text-xs text-gray-400">{stat.label}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

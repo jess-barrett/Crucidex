@@ -90,8 +90,8 @@ export default function DashboardPage({ userId }: { userId: string }) {
 
         if (genresError) throw genresError;
 
-        setLibrary((libraryData as UserGame[]) || []);
-        setGenres((genresData as Genre[]) || []);
+        setLibrary((libraryData as unknown as UserGame[]) || []);
+        setGenres((genresData as unknown as Genre[]) || []);
       } catch (err: any) {
         console.error("Error loading dashboard data:", err);
         setError(err.message || "Failed to load dashboard data");
