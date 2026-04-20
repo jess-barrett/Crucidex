@@ -237,7 +237,7 @@ export default function GameActionButtons({
       )}
 
       {/* Edit Game Modal */}
-      {showEditModal && inLibrary && (
+      {showEditModal && inLibrary && userId && (
         <EditGameModal
           game={{
             ...userGame,
@@ -249,6 +249,7 @@ export default function GameActionButtons({
                 : null,
             },
           }}
+          userId={userId}
           onSave={(hours, rating, playStatus) =>
             handleEditSave(hours, rating, playStatus)
           }

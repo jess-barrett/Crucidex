@@ -390,9 +390,10 @@ export default function LibraryPage() {
       </div>
 
       {/* Modals */}
-      {isOwnProfile && editingGame && (
+      {isOwnProfile && editingGame && profile && (
         <EditGameModal
           game={editingGame}
+          userId={profile.id}
           onSave={(hours, rating, playStatus) =>
             handleEditSave(editingGame.id, hours, rating, playStatus)
           }
