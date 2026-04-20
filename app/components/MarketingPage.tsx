@@ -80,7 +80,7 @@ export default function MarketingPage() {
         {/* Feature 1: Index Your Collection - Image Left */}
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <img
-            src="/images/homepage/Cruicidex-Index.PNG"
+            src="/images/homepage/Crucidex-Library.PNG"
             alt="Index Your Collection"
             className="rounded-2xl w-full shadow-2xl"
           />
@@ -109,16 +109,20 @@ export default function MarketingPage() {
               gaming profile and become a trusted voice in the community.
             </p>
           </div>
-          <div className="bg-gray-700/30 rounded-2xl aspect-video flex items-center justify-center order-1 md:order-2">
-            <span className="text-gray-500 text-lg">Feature Image</span>
-          </div>
+          <img
+            src="/images/homepage/Crucidex-Reviews.PNG"
+            alt="Share Reviews"
+            className="rounded-2xl w-full shadow-2xl order-1 md:order-2"
+          />
         </div>
 
         {/* Feature 3: Stay Connected - Image Left */}
         <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="bg-gray-700/30 rounded-2xl aspect-video flex items-center justify-center">
-            <span className="text-gray-500 text-lg">Feature Image</span>
-          </div>
+          <img
+            src="/images/homepage/Crucidex-Friends.PNG"
+            alt="Stay Connected with Friends"
+            className="rounded-2xl w-full shadow-2xl"
+          />
           <div>
             <h3 className="text-3xl font-bold text-white mb-4">
               Stay Caught Up With Your Friends
@@ -144,9 +148,11 @@ export default function MarketingPage() {
               with personalized picks.
             </p>
           </div>
-          <div className="bg-gray-700/30 rounded-2xl aspect-video flex items-center justify-center order-1 md:order-2">
-            <span className="text-gray-500 text-lg">Feature Image</span>
-          </div>
+          <img
+            src="/images/homepage/Crucidex-Recommendations.PNG"
+            alt="Personalized Recommendations"
+            className="rounded-2xl w-full shadow-2xl order-1 md:order-2"
+          />
         </div>
       </div>
 
