@@ -7,30 +7,7 @@ import PersonalStatsCard from "./PersonalStatsCard";
 import UserRatingDistribution from "./UserRatingDistribution";
 import RecentActivityFeed from "./RecentActivityFeed";
 import TrendingGamesSection from "./TrendingGamesSection";
-
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  top_four_position: number | null;
-  play_status: string | null;
-  added_at: string;
-  last_played_at: string | null;
-  games: {
-    id: string;
-    igdb_id: number;
-    title: string;
-    cover_url: string | null;
-    igdb_rating: number | null;
-    genres: number[] | null;
-    game_modes: number[] | null;
-  };
-}
-
-interface Genre {
-  id: number;
-  name: string;
-}
+import type { UserGame, Genre } from "@/lib/types";
 
 export default function DashboardPage({ userId }: { userId: string }) {
   const [library, setLibrary] = useState<UserGame[]>([]);
