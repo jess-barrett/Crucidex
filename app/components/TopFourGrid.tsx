@@ -1,19 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  top_four_position: number | null;
-  games: {
-    id: string;
-    igdb_id: number;
-    title: string;
-    cover_url: string | null;
-  };
-}
+import type { UserGame } from "@/lib/types";
 
 interface TopFourGridProps {
   topFour: UserGame[];

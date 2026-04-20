@@ -2,27 +2,7 @@
 
 import TopFourGrid from "./TopFourGrid";
 import FriendRequestButton from "./FriendRequestButton";
-
-interface Profile {
-  id: string;
-  username: string;
-  display_name: string;
-  avatar_url: string | null;
-  bio: string | null;
-  created_at: string;
-}
-
-interface UserGame {
-  id: string;
-  playtime_hours: number;
-  rating: number | null;
-  top_four_position: number | null;
-  games: {
-    id: string;
-    title: string;
-    cover_url: string | null;
-  };
-}
+import type { UserGame, Profile } from "@/lib/types";
 
 interface ProfileSidebarProps {
   profile: Profile;
