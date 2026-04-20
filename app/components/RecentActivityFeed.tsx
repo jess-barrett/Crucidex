@@ -2,18 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-
-interface UserGame {
-  id: string;
-  added_at: string;
-  last_played_at: string | null;
-  games: {
-    id: string;
-    igdb_id: number;
-    title: string;
-    cover_url: string | null;
-  };
-}
+import type { UserGame } from "@/lib/types";
 
 interface RecentActivityFeedProps {
   library: UserGame[];
@@ -44,7 +33,7 @@ export default function RecentActivityFeed({
     const recentlyAdded = library.map((g) => ({
       id: g.id,
       game: g,
-      date: new Date(g.added_at),
+      date: new Date(g.added_at!),
       type: "added" as const,
     }));
 
