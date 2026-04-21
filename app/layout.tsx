@@ -8,6 +8,16 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Crucidex",
   description: "Track your gaming history",
+  icons: {
+    icon: [
+      { url: "/icon.svg", media: "(prefers-color-scheme: light)", type: "image/svg+xml" },
+      { url: "/icon-dark.svg", media: "(prefers-color-scheme: dark)", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", media: "(prefers-color-scheme: light)" },
+      { url: "/apple-icon-dark.png", media: "(prefers-color-scheme: dark)" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -18,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="apple-mobile-web-app-title" content="Crucidex" />
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
