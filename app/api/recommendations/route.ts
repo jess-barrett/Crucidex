@@ -61,6 +61,13 @@ export async function GET() {
       serviceRoleKey
     );
 
+    // Load dismissed igdb_ids so we never show them
+    const { data: dismissals } = await adminSupabase
+      .from("recommendation_dismissals")
+      .select("igdb_id")
+      .eq("user_id", user.id);
+    const dismissedIds = new Set<number>((dismissals || []).map((d: any) => d.igdb_id));
+
     // ── Check cache ──────────────────────────────────────────────
     const cutoff = new Date(Date.now() - CACHE_TTL_MS).toISOString();
     const { data: cached } = await adminSupabase
@@ -69,30 +76,37 @@ export async function GET() {
       .eq("user_id", user.id)
       .gte("computed_at", cutoff)
       .order("score", { ascending: false })
-      .limit(10);
+      .limit(30); // Pull more so we can filter out dismissed and still have plenty left
 
     if (cached && cached.length > 0) {
-      console.log(`[Recommendations] Cache hit — ${cached.length} results`);
-      const recommendations = cached.map((r) => ({
-        igdb_id: r.igdb_id,
-        score: r.score,
-        recommended_by_count: r.recommended_by_count,
-        game: {
+      // Filter out dismissed games from the cached results
+      const filteredCached = cached.filter((r: any) => !dismissedIds.has(r.igdb_id)).slice(0, 10);
+
+      // If dismissals ate too many from cache, fall through and recompute
+      if (filteredCached.length >= 5) {
+        console.log(`[Recommendations] Cache hit — ${filteredCached.length} results (${cached.length - filteredCached.length} dismissed)`);
+        const recommendations = filteredCached.map((r: any) => ({
           igdb_id: r.igdb_id,
-          title: r.game_title,
-          cover_url: r.game_cover_url,
-          igdb_rating: r.game_igdb_rating,
-          genres: r.game_genres,
-        },
-      }));
-      const reason = cached.every((r) => !r.is_collaborative) ? "genre_based" : undefined;
-      return NextResponse.json({ recommendations, ...(reason ? { reason } : {}), cached: true });
+          score: r.score,
+          recommended_by_count: r.recommended_by_count,
+          game: {
+            igdb_id: r.igdb_id,
+            title: r.game_title,
+            cover_url: r.game_cover_url,
+            igdb_rating: r.game_igdb_rating,
+            genres: r.game_genres,
+          },
+        }));
+        const reason = filteredCached.every((r: any) => !r.is_collaborative) ? "genre_based" : undefined;
+        return NextResponse.json({ recommendations, ...(reason ? { reason } : {}), cached: true });
+      }
+      console.log(`[Recommendations] Cache has too few after dismissals (${filteredCached.length}), recomputing`);
     }
 
     console.log(`[Recommendations] Cache miss — computing for user ${user.id}`);
 
     // ── Compute ──────────────────────────────────────────────────
-    const recommendations = await computeRecommendations(user.id, adminSupabase);
+    const recommendations = await computeRecommendations(user.id, adminSupabase, dismissedIds);
 
     // ── Save to cache ────────────────────────────────────────────
     if (recommendations.recs.length > 0) {
@@ -134,6 +148,122 @@ export async function GET() {
   }
 }
 
+// ── POST — mark a recommendation as "not interested" ────────────────────────
+// Body: { igdb_id: number }
+// Returns a replacement recommendation so the client can swap it in.
+export async function POST(request: Request) {
+  try {
+    const supabase = await createServerComponentClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const body = await request.json();
+    const igdb_id: unknown = body?.igdb_id;
+    const currentIds: number[] = Array.isArray(body?.currentIds) ? body.currentIds : [];
+    if (typeof igdb_id !== "number") {
+      return NextResponse.json({ error: "igdb_id required" }, { status: 400 });
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      return NextResponse.json({ error: "Service not configured" }, { status: 500 });
+    }
+
+    const adminSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      serviceRoleKey
+    );
+
+    // Record the dismissal (idempotent via UNIQUE constraint)
+    await adminSupabase
+      .from("recommendation_dismissals")
+      .upsert(
+        { user_id: user.id, igdb_id },
+        { onConflict: "user_id,igdb_id" }
+      );
+
+    // Remove this game from the cached recommendations
+    await adminSupabase
+      .from("recommendations")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("igdb_id", igdb_id);
+
+    // Find a replacement — pull all dismissed ids and pick the next best cached rec
+    // not in the dismissed set. Fall back to recompute if cache is empty.
+    const { data: allDismissals } = await adminSupabase
+      .from("recommendation_dismissals")
+      .select("igdb_id")
+      .eq("user_id", user.id);
+    const dismissedSet = new Set<number>((allDismissals || []).map((d: any) => d.igdb_id));
+
+    const { data: remaining } = await adminSupabase
+      .from("recommendations")
+      .select("igdb_id, score, recommended_by_count, is_collaborative, game_title, game_cover_url, game_igdb_rating, game_genres")
+      .eq("user_id", user.id)
+      .order("score", { ascending: false })
+      .limit(30);
+
+    // Filter out dismissed games and any currently-visible ones the client sent
+    const available = (remaining || []).filter(
+      (r: any) => !dismissedSet.has(r.igdb_id) && !currentIds.includes(r.igdb_id)
+    );
+
+    let replacement: Recommendation | null = null;
+
+    if (available.length > 0) {
+      // We had a cached spare — use it
+      const top = available[0];
+      replacement = {
+        igdb_id: top.igdb_id,
+        score: top.score,
+        recommended_by_count: top.recommended_by_count,
+        game: {
+          igdb_id: top.igdb_id,
+          title: top.game_title,
+          cover_url: top.game_cover_url,
+          igdb_rating: top.game_igdb_rating,
+          genres: top.game_genres,
+        },
+      };
+    } else {
+      // No cached spare — compute fresh recommendations excluding dismissed
+      // AND already-visible games, then pick the first unseen one.
+      console.log(`[Recommendations] No cached replacement, recomputing for user ${user.id}`);
+
+      const exclusionSet = new Set<number>([...dismissedSet, ...currentIds]);
+      const fresh = await computeRecommendations(user.id, adminSupabase, exclusionSet);
+
+      const unseen = fresh.recs.find((r) => !currentIds.includes(r.igdb_id));
+      if (unseen) {
+        replacement = unseen;
+
+        // Persist this new rec to the cache so it shows up on future page loads
+        await adminSupabase.from("recommendations").upsert(
+          {
+            user_id: user.id,
+            igdb_id: unseen.igdb_id,
+            score: unseen.score,
+            recommended_by_count: unseen.recommended_by_count,
+            is_collaborative: unseen.recommended_by_count > 0,
+            game_title: unseen.game.title,
+            game_cover_url: unseen.game.cover_url,
+            game_igdb_rating: unseen.game.igdb_rating,
+            game_genres: unseen.game.genres,
+            computed_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,igdb_id" }
+        );
+      }
+    }
+
+    return NextResponse.json({ success: true, replacement });
+  } catch (err) {
+    console.error("Dismiss recommendation error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
 // ── DELETE — invalidate cache for the current user ──────────────────────────
 // Called fire-and-forget whenever the user's library changes.
 export async function DELETE() {
@@ -162,7 +292,8 @@ export async function DELETE() {
 // ── Core algorithm ───────────────────────────────────────────────────────────
 async function computeRecommendations(
   userId: string,
-  adminSupabase: any
+  adminSupabase: any,
+  dismissedIds: Set<number> = new Set()
 ): Promise<{ recs: Recommendation[]; reason?: string }> {
 
   const { data: allUserGames, error } = await adminSupabase
@@ -248,6 +379,7 @@ async function computeRecommendations(
     const id = row.games?.igdb_id;
     if (id == null || !row.games) continue;
     if (targetIgdbIds.has(id)) continue;
+    if (dismissedIds.has(id)) continue;
 
     const similarity = userSimilarities.get(row.user_id) ?? 0;
     if (similarity <= 0) continue;
@@ -307,7 +439,7 @@ async function computeRecommendations(
 
   if (needed > 0 && topGenres.length > 0) {
     try {
-      const usedIds = new Set([...targetIgdbIds, ...collaborativeRecs.map((r) => r.igdb_id)]);
+      const usedIds = new Set([...targetIgdbIds, ...collaborativeRecs.map((r) => r.igdb_id), ...dismissedIds]);
       const raw = await getTopGamesByGenres(topGenres, needed + 20);
       if (Array.isArray(raw)) {
         genreRecs = raw
