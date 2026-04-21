@@ -143,22 +143,39 @@ function SettingsContent() {
     setUploadingAvatar(true);
 
     try {
-      // Generate unique filename
-      const fileExt = file.name.split(".").pop();
-      const fileName = `avatar.${fileExt}`;
+      // List existing avatar files for this user so we can delete them after the new upload succeeds
+      const { data: existingFiles } = await supabase.storage
+        .from("avatars")
+        .list(profile.id);
+
+      // Generate unique filename with timestamp so the URL changes every upload
+      // (busts browser/CDN cache and avoids orphan files with different extensions)
+      const fileExt = (file.name.split(".").pop() || "png").toLowerCase();
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
       const filePath = `${profile.id}/${fileName}`;
 
-      // Upload to Supabase storage
+      // Upload new file
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { upsert: false });
 
       if (uploadError) {
         console.error("Upload error details:", uploadError);
         throw uploadError;
       }
 
-      // Get public URL
+      // Delete previous avatar files (skip the one we just uploaded)
+      if (existingFiles && existingFiles.length > 0) {
+        const toDelete = existingFiles
+          .filter((f) => f.name !== fileName)
+          .map((f) => `${profile.id}/${f.name}`);
+
+        if (toDelete.length > 0) {
+          await supabase.storage.from("avatars").remove(toDelete);
+        }
+      }
+
+      // Get public URL for the newly uploaded file
       const {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(filePath);
