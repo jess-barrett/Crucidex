@@ -1,13 +1,12 @@
 "use client";
 
 import { createClient } from "@/lib/supabase-client";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { EmailOtpType } from "@supabase/supabase-js";
 
 function ConfirmContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const supabase = createClient();
 
   const token_hash = searchParams.get("token_hash");
@@ -50,9 +49,6 @@ function ConfirmContent() {
 
     setVerified(true);
     setLoading(false);
-
-    // Also redirect this tab after a short delay
-    setTimeout(() => router.push(next), 2000);
   }
 
   const title =
