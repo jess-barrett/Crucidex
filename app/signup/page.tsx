@@ -30,15 +30,15 @@ export default function SignUp() {
       },
     });
 
+    // Debug logs (visible in browser console)
+    console.log("Signup response:", { data, error: signUpError });
+
     if (signUpError) {
-      // Make the message friendlier when possible
       const msg = signUpError.message.toLowerCase();
       if (msg.includes("user already registered") || msg.includes("already been registered")) {
         setError("An account with this email already exists. Try logging in instead.");
       } else if (msg.includes("duplicate key") && msg.includes("username")) {
         setError("That username is already taken. Please choose another.");
-      } else if (msg.includes("password")) {
-        setError(signUpError.message);
       } else {
         setError(signUpError.message);
       }
@@ -46,19 +46,24 @@ export default function SignUp() {
       return;
     }
 
-    // Supabase silently succeeds (no error) when the email is already taken,
-    // but returns an empty identities array. Detect that case.
-    if (data.user && data.user.identities && data.user.identities.length === 0) {
-      setError(
-        "An account with this email already exists. Try logging in instead."
-      );
+    // Supabase silently succeeds when the email is already taken but returns
+    // an empty identities array. Detect that case.
+    if (data?.user?.identities && data.user.identities.length === 0) {
+      setError("An account with this email already exists. Try logging in instead.");
       setLoading(false);
       return;
     }
 
-    // Success — email is being sent
-    setSubmittedEmail(email);
-    setSuccess(true);
+    // If we got this far, signup succeeded — show the verify-email screen.
+    if (data?.user) {
+      setSubmittedEmail(email);
+      setSuccess(true);
+      setLoading(false);
+      return;
+    }
+
+    // Defensive fallback — shouldn't normally hit this
+    setError("Something unexpected happened. Please try again.");
     setLoading(false);
   }
 
