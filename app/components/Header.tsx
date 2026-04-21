@@ -289,7 +289,7 @@ export default function Header() {
               {/* User Search — icon expands to search bar on hover */}
               <div ref={userSearchRef} className="relative group/user flex items-center">
                 <div className="flex items-center bg-gray-700 hover:bg-gray-600 rounded-lg h-9 px-2.5 transition-all duration-300 overflow-hidden">
-                  <i className="fa-solid fa-user text-sm text-gray-300 flex-shrink-0"></i>
+                  <i className="fa-solid fa-user-plus text-sm text-gray-300 flex-shrink-0"></i>
                   <input
                     type="text"
                     value={userQuery}

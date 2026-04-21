@@ -13,6 +13,7 @@ export default function DashboardPage({ userId }: { userId: string }) {
   const [library, setLibrary] = useState<UserGame[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [displayName, setDisplayName] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,12 +25,13 @@ export default function DashboardPage({ userId }: { userId: string }) {
         // Fetch user's profile
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("display_name")
+          .select("display_name, username")
           .eq("id", userId)
           .single();
 
         if (profileError) throw profileError;
         setDisplayName(profileData?.display_name || "");
+        setUsername(profileData?.username || "");
 
         // Fetch user's library
         const { data: libraryData, error: libraryError } = await supabase
@@ -122,9 +124,20 @@ export default function DashboardPage({ userId }: { userId: string }) {
       <main className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Message */}
-        <h1 className="text-3xl font-bold text-white mb-8">
-          Welcome back, {displayName}!
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-white">
+            Welcome back, {displayName}!
+          </h1>
+          {username && (
+            <a
+              href={`/u/${username}/profile`}
+              className="inline-flex items-center gap-2 bg-[#b8253d] hover:bg-[#8a1c2e] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+            >
+              <i className="fa-solid fa-user"></i>
+              Go to Profile
+            </a>
+          )}
+        </div>
 
         {/* Top row - 3 columns on desktop, stacked on mobile */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">

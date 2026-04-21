@@ -540,9 +540,23 @@ const NON_BASE_GAME_KEYWORDS = [
   ": season", // Matches "Game: Season 1", "Game: Season 2", etc.
 ];
 
+// Known game titles that contain "non-base" keywords as part of their canonical name.
+// These should never be flagged as editions/bundles.
+const TITLE_EXCEPTIONS = [
+  "master chief collection",
+  "orange box",
+  "the witcher 3: wild hunt – complete edition", // if anyone actually uses this
+];
+
 // Check if a game name contains non-base-game keywords
 export function isNonBaseGame(gameName: string): boolean {
   const lowerName = gameName.toLowerCase();
+
+  // Whitelist games whose canonical name contains a filter keyword
+  if (TITLE_EXCEPTIONS.some((t) => lowerName.includes(t))) {
+    return false;
+  }
+
   return NON_BASE_GAME_KEYWORDS.some((keyword) => lowerName.includes(keyword));
 }
 
