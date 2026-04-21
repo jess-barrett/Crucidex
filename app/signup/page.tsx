@@ -1,7 +1,8 @@
 "use client";
 
 import { createClient } from "@/lib/supabase-client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
@@ -12,7 +13,31 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
+  const [verifiedInOtherTab, setVerifiedInOtherTab] = useState(false);
   const supabase = createClient();
+  const router = useRouter();
+
+  // Listen for email verification from the confirm tab
+  useEffect(() => {
+    if (!success) return;
+
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel("crucidex-auth");
+      channel.onmessage = (e) => {
+        if (e.data?.event === "email_verified") {
+          setVerifiedInOtherTab(true);
+          setTimeout(() => router.push(e.data.next || "/"), 1500);
+        }
+      };
+    } catch {
+      // BroadcastChannel not supported
+    }
+
+    return () => {
+      channel?.close();
+    };
+  }, [success, router]);
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +94,23 @@ export default function SignUp() {
 
   // ── Success screen ──
   if (success) {
+    // Post-verification state — triggered by BroadcastChannel from confirm tab
+    if (verifiedInOtherTab) {
+      return (
+        <main className="min-h-screen flex items-center justify-center px-4">
+          <div className="max-w-md text-center">
+            <i className="fa-solid fa-circle-check text-5xl text-green-500 mb-4"></i>
+            <h1 className="text-2xl font-bold text-white mb-3">
+              Email Verified!
+            </h1>
+            <p className="text-gray-300">
+              Welcome to Crucidex. Redirecting you in...
+            </p>
+          </div>
+        </main>
+      );
+    }
+
     return (
       <main className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-md text-center">
@@ -84,7 +126,8 @@ export default function SignUp() {
           </p>
           <p className="text-sm text-gray-400 mb-6">
             Click the link in that email to finish creating your account. If
-            you don&apos;t see it, check your spam folder.
+            you don&apos;t see it, check your spam folder. This tab will
+            automatically continue once you verify.
           </p>
           <div className="flex gap-3 justify-center">
             <a

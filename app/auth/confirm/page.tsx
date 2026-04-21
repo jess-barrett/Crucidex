@@ -16,6 +16,7 @@ function ConfirmContent() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verified, setVerified] = useState(false);
 
   async function handleConfirm() {
     if (!token_hash || !type) {
@@ -37,7 +38,21 @@ function ConfirmContent() {
       return;
     }
 
-    router.push(next);
+    // Notify any other tab on this origin (e.g. the signup success screen)
+    // that verification succeeded, so it can redirect itself.
+    try {
+      const channel = new BroadcastChannel("crucidex-auth");
+      channel.postMessage({ event: "email_verified", next });
+      channel.close();
+    } catch {
+      // BroadcastChannel not supported — fall through silently
+    }
+
+    setVerified(true);
+    setLoading(false);
+
+    // Also redirect this tab after a short delay
+    setTimeout(() => router.push(next), 2000);
   }
 
   const title =
@@ -57,6 +72,23 @@ function ConfirmContent() {
       : type === "email_change"
       ? "Click below to confirm your new email address."
       : "Click below to continue.";
+
+  // After successful verification
+  if (verified) {
+    return (
+      <div className="max-w-md text-center">
+        <i className="fa-solid fa-circle-check text-5xl text-green-500 mb-4"></i>
+        <h1 className="text-2xl font-bold text-white mb-3">All Set!</h1>
+        <p className="text-gray-300 mb-2">
+          Your email has been verified.
+        </p>
+        <p className="text-gray-400 text-sm">
+          You can close this tab — we&apos;re taking you into Crucidex in the
+          original window.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md text-center">
