@@ -76,7 +76,7 @@ export default function LibraryPage() {
            games (id, igdb_id, title, cover_url, igdb_rating, genres, game_modes)`
         )
         .eq("user_id", profileData.id)
-        .neq("play_status", "wishlist")
+        .or("play_status.neq.wishlist,play_status.is.null")
         .order("added_at", { ascending: false }),
 
       supabase.from("genres").select("id, name").order("name"),
