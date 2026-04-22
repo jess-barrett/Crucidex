@@ -239,10 +239,10 @@ export default function ProfilePage() {
                     {isOwnProfile && (
                       <button
                         onClick={() => handleRemoveTopFour(game.id)}
-                        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-all text-sm"
+                        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 bg-[#b8253d] hover:bg-[#8a1c2e] text-white rounded-full w-6 h-6 flex items-center justify-center transition-all"
                         title="Remove from Favorites"
                       >
-                        &times;
+                        <i className="fa-solid fa-xmark text-xs"></i>
                       </button>
                     )}
                   </>
