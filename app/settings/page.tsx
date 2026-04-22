@@ -32,6 +32,23 @@ function SettingsContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // After the page finishes loading, scroll to any hash anchor in the URL.
+  // Needed because Next.js client components don't auto-scroll to hashes
+  // when the target element doesn't exist on initial render.
+  useEffect(() => {
+    if (loading) return;
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) return;
+    // Defer one frame so the DOM is committed
+    requestAnimationFrame(() => {
+      const el = document.getElementById(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  }, [loading]);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -373,6 +390,14 @@ function SettingsContent() {
 
   return (
     <main className="min-h-screen p-8 max-w-2xl mx-auto">
+      <button
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-4"
+      >
+        <i className="fa-solid fa-arrow-left"></i>
+        Back
+      </button>
+
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
         <p className="text-gray-400">
@@ -558,7 +583,10 @@ function SettingsContent() {
       </div>
 
       {/* Steam Integration */}
-      <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6">
+      <div
+        id="steam-integration"
+        className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6 scroll-mt-20"
+      >
         <h2 className="text-xl font-semibold text-white mb-4">Steam Integration</h2>
 
         {steamId ? (

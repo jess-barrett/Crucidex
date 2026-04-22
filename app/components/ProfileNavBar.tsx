@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface ProfileNavBarProps {
@@ -38,7 +39,7 @@ export default function ProfileNavBar({ username }: ProfileNavBarProps) {
         {TABS.map((tab) => {
           const active = isActive(tab.path);
           return (
-            <a
+            <Link
               key={tab.label}
               href={getHref(tab.path)}
               className={`flex-1 text-center py-3 text-sm font-medium transition-colors relative ${
@@ -51,7 +52,7 @@ export default function ProfileNavBar({ username }: ProfileNavBarProps) {
               {active && (
                 <span className="absolute bottom-0 left-[12.5%] right-[12.5%] h-[2px] bg-[#b8253d]" />
               )}
-            </a>
+            </Link>
           );
         })}
       </div>

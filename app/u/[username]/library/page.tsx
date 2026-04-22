@@ -1,9 +1,7 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase-client";
-import ProfileNavBar from "@/app/components/ProfileNavBar";
 import LibraryControls, {
   SortOption,
   HoursFilter,
@@ -16,18 +14,15 @@ import ConfirmDeleteModal from "@/app/components/ConfirmDeleteModal";
 import SearchGameModal from "@/app/components/SearchGameModal";
 import AddGameModal from "@/app/components/AddGameModal";
 import Toast from "@/app/components/Toast";
-import type { UserGame, Profile, Genre } from "@/lib/types";
+import { useProfileLayout } from "@/lib/profile-layout-context";
+import type { UserGame, Genre } from "@/lib/types";
 
 export default function LibraryPage() {
-  const params = useParams();
-  const username = params.username as string;
+  const { profile, isOwnProfile, refresh: refreshLayout } = useProfileLayout();
 
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [library, setLibrary] = useState<UserGame[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isOwnProfile, setIsOwnProfile] = useState(false);
-  const [friendsCount, setFriendsCount] = useState(0);
+  const [dataLoading, setDataLoading] = useState(true);
 
   // Library UI state
   const [editingGame, setEditingGame] = useState<UserGame | null>(null);
@@ -50,68 +45,32 @@ export default function LibraryPage() {
   const supabase = createClient();
 
   async function loadData() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    if (!profile) return;
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("username", username)
-      .single();
-
-    if (!profileData) {
-      setLoading(false);
-      return;
-    }
-
-    setProfile(profileData);
-    setIsOwnProfile(user?.id === profileData.id);
-
-    const [libraryRes, genresRes, friendsRes] = await Promise.all([
+    const [libraryRes, genresRes] = await Promise.all([
       supabase
         .from("user_games")
         .select(
           `id, playtime_hours, rating, top_four_position, play_status, added_at, last_played_at,
            games (id, igdb_id, title, cover_url, igdb_rating, genres, game_modes)`
         )
-        .eq("user_id", profileData.id)
+        .eq("user_id", profile.id)
         .or("play_status.neq.wishlist,play_status.is.null")
         .order("added_at", { ascending: false }),
 
       supabase.from("genres").select("id, name").order("name"),
-
-      supabase
-        .from("friendships")
-        .select("id", { count: "exact" })
-        .or(
-          `requester_id.eq.${profileData.id},addressee_id.eq.${profileData.id}`
-        )
-        .eq("status", "accepted"),
     ]);
 
     if (libraryRes.data)
       setLibrary(libraryRes.data as unknown as UserGame[]);
-    if (genresRes.data) setGenres(genresRes.data);
-    setFriendsCount(friendsRes.count || 0);
-
-    setLoading(false);
+    if (genresRes.data) setGenres(genresRes.data as unknown as Genre[]);
+    setDataLoading(false);
   }
 
   useEffect(() => {
     loadData();
-  }, [username]);
-
-  // Stats
-  const stats = useMemo(() => {
-    const nonWishlist = library.filter((g) => g.play_status !== "wishlist");
-    return {
-      games: nonWishlist.length,
-      hours: Math.round(
-        nonWishlist.reduce((s, g) => s + (g.playtime_hours || 0), 0)
-      ),
-    };
-  }, [library]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
 
   // Genres in library
   const genresInLibrary = useMemo(() => {
@@ -184,7 +143,6 @@ export default function LibraryPage() {
     });
   }, [filteredLibrary, sortOption]);
 
-  // Handlers
   async function handleEditSave(
     gameId: string,
     hours: number,
@@ -201,6 +159,7 @@ export default function LibraryPage() {
     setEditingGame(null);
     setToast({ message: "Game updated!", type: "success" });
     loadData();
+    refreshLayout();
   }
 
   async function handleDeleteConfirm(gameId: string) {
@@ -214,148 +173,84 @@ export default function LibraryPage() {
     setDeletingGame(null);
     setToast({ message: "Game deleted", type: "success" });
     loadData();
+    refreshLayout();
   }
 
   function handleGameAdded() {
     setSelectedGame(null);
     setToast({ message: "Game added to your library!", type: "success" });
     loadData();
+    refreshLayout();
   }
 
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400">Loading...</p>
-      </main>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2 text-white">
-            User Not Found
-          </h1>
-          <p className="text-gray-500">@{username} does not exist.</p>
-        </div>
-      </main>
-    );
-  }
+  if (!profile) return null;
 
   return (
-    <main className="min-h-screen">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* ── Row 1: User Info + Stats ── */}
-        <div className="flex items-center justify-between">
+    <>
+      {dataLoading ? (
+        <div className="py-12 text-center text-gray-500 text-sm">Loading...</div>
+      ) : (
+        <>
+          {/* ── Library Controls ── */}
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center text-2xl overflow-hidden flex-shrink-0 ring-2 ring-[#b8253d]/30">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.display_name}
-                  className="w-full h-full object-cover"
+            <div className="flex-1">
+              {library.length > 0 && (
+                <LibraryControls
+                  sortOption={sortOption}
+                  onSortChange={setSortOption}
+                  hoursFilter={hoursFilter}
+                  onHoursFilterChange={setHoursFilter}
+                  genreFilter={genreFilter}
+                  onGenreFilterChange={setGenreFilter}
+                  modeFilter={modeFilter}
+                  onModeFilterChange={setModeFilter}
+                  playStatusFilter={playStatusFilter}
+                  onPlayStatusFilterChange={setPlayStatusFilter}
+                  availableGenres={genresInLibrary}
                 />
-              ) : (
-                <span className="text-white font-bold">
-                  {profile.display_name.charAt(0).toUpperCase()}
-                </span>
               )}
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">
-                {profile.display_name}
-              </h1>
-              <p className="text-gray-400 text-sm">@{profile.username}</p>
-              {isOwnProfile && (
-                <a
-                  href="/settings"
-                  className="inline-block mt-1.5 text-xs text-gray-400 hover:text-white border border-gray-600 hover:border-gray-500 rounded px-3 py-1 transition-colors"
-                >
-                  Edit Profile
-                </a>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-8">
-            {[
-              { value: stats.games, label: "Games" },
-              { value: stats.hours, label: "Hours" },
-              { value: friendsCount, label: "Friends" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-gray-400 uppercase tracking-wide">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Row 2: Nav Bar ── */}
-        <ProfileNavBar username={username} />
-
-        {/* ── Library Controls ── */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            {library.length > 0 && (
-              <LibraryControls
-                sortOption={sortOption}
-                onSortChange={setSortOption}
-                hoursFilter={hoursFilter}
-                onHoursFilterChange={setHoursFilter}
-                genreFilter={genreFilter}
-                onGenreFilterChange={setGenreFilter}
-                modeFilter={modeFilter}
-                onModeFilterChange={setModeFilter}
-                playStatusFilter={playStatusFilter}
-                onPlayStatusFilterChange={setPlayStatusFilter}
-                availableGenres={genresInLibrary}
-              />
+            {isOwnProfile && (
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="text-[#b8253d] hover:text-[#8a1c2e] text-sm font-medium transition-colors flex-shrink-0"
+              >
+                + Add games
+              </button>
             )}
           </div>
-          {isOwnProfile && (
-            <button
-              onClick={() => setShowSearchModal(true)}
-              className="text-[#b8253d] hover:text-[#8a1c2e] text-sm font-medium transition-colors flex-shrink-0"
-            >
-              + Add games
-            </button>
-          )}
-        </div>
 
-        {/* ── Library Grid — full width ── */}
-        <div>
-          {library.length === 0 ? (
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-12 text-center">
-              <i className="fa-solid fa-gamepad text-4xl text-gray-600 mb-4"></i>
-              <p className="text-gray-400">
-                {isOwnProfile
-                  ? "Your library is empty. Add some games!"
-                  : "No games in library."}
+          {/* ── Library Grid ── */}
+          <div>
+            {library.length === 0 ? (
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-12 text-center">
+                <i className="fa-solid fa-gamepad text-4xl text-gray-600 mb-4"></i>
+                <p className="text-gray-400">
+                  {isOwnProfile
+                    ? "Your library is empty. Add some games!"
+                    : "No games in library."}
+                </p>
+              </div>
+            ) : displayedLibrary.length === 0 ? (
+              <p className="text-gray-500 text-sm">
+                No games match your filters.
               </p>
-            </div>
-          ) : displayedLibrary.length === 0 ? (
-            <p className="text-gray-500 text-sm">
-              No games match your filters.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {displayedLibrary.map((item) => (
-                <GameCard
-                  key={item.id}
-                  item={item}
-                  isOwnProfile={isOwnProfile}
-                  onEdit={() => setEditingGame(item)}
-                  onDelete={() => setDeletingGame(item)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                {displayedLibrary.map((item) => (
+                  <GameCard
+                    key={item.id}
+                    item={item}
+                    isOwnProfile={isOwnProfile}
+                    onEdit={() => setEditingGame(item)}
+                    onDelete={() => setDeletingGame(item)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Modals */}
       {isOwnProfile && editingGame && profile && (
@@ -403,6 +298,6 @@ export default function LibraryPage() {
           onClose={() => setToast(null)}
         />
       )}
-    </main>
+    </>
   );
 }
