@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 interface RecommendedGame {
@@ -22,13 +22,26 @@ export default function TrendingGamesSection() {
   const [reason, setReason] = useState<string | null>(null);
   const [dismissingId, setDismissingId] = useState<number | null>(null);
 
+  // Synchronous tracker of every igdb_id the server has shown us so far.
+  // Used to avoid duplicate replacements when the user clicks "Not Interested"
+  // multiple times in rapid succession (state updates are async, so reading
+  // `recommendations` directly in the handler returns stale data).
+  const knownIdsRef = useRef<Set<number>>(new Set());
+
+  // Serializes server requests. Rapid clicks still update the UI instantly
+  // (optimistic removal), but each fetch waits for the previous to resolve
+  // so `currentIds` always reflects the latest set of known games.
+  const requestQueueRef = useRef<Promise<void>>(Promise.resolve());
+
   useEffect(() => {
     async function fetchRecommendations() {
       try {
         const res = await fetch("/api/recommendations");
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
-        setRecommendations(data.recommendations || []);
+        const recs: RecommendedGame[] = data.recommendations || [];
+        knownIdsRef.current = new Set(recs.map((r) => r.igdb_id));
+        setRecommendations(recs);
         setReason(data.reason || null);
       } catch {
         setRecommendations([]);
@@ -41,30 +54,40 @@ export default function TrendingGamesSection() {
 
   async function handleDismiss(igdbId: number) {
     setDismissingId(igdbId);
-    try {
-      const res = await fetch("/api/recommendations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          igdb_id: igdbId,
-          currentIds: recommendations.map((r) => r.igdb_id),
-        }),
-      });
 
-      if (!res.ok) throw new Error("Failed to dismiss");
-      const data = await res.json();
+    // Optimistically remove from the UI immediately so rapid clicks feel responsive
+    setRecommendations((prev) => prev.filter((r) => r.igdb_id !== igdbId));
 
-      setRecommendations((prev) => {
-        // Remove the dismissed one, then append the replacement (if any)
-        const filtered = prev.filter((r) => r.igdb_id !== igdbId);
+    // Chain this dismissal onto the request queue. Each queued task waits for
+    // the previous one to finish so currentIds is always fresh.
+    const task = requestQueueRef.current.then(async () => {
+      try {
+        const res = await fetch("/api/recommendations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            igdb_id: igdbId,
+            currentIds: Array.from(knownIdsRef.current),
+          }),
+        });
+
+        if (!res.ok) return;
+        const data = await res.json();
+
         if (data.replacement) {
-          return [...filtered, data.replacement];
+          const replacementId: number = data.replacement.igdb_id;
+          if (!knownIdsRef.current.has(replacementId)) {
+            knownIdsRef.current.add(replacementId);
+            setRecommendations((prev) => [...prev, data.replacement]);
+          }
         }
-        return filtered;
-      });
-    } catch {
-      // silently fail; the rec stays put
-    }
+      } catch {
+        // silently fail
+      }
+    });
+
+    requestQueueRef.current = task;
+    await task;
     setDismissingId(null);
   }
 
