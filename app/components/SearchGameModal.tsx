@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Game {
   id: number;
@@ -31,23 +31,35 @@ export default function SearchGameModal({
   const [results, setResults] = useState<Game[]>([]);
   const [loading, setLoading] = useState(false);
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!query.trim()) return;
+  // Debounced live search — fetch as the user types, 300ms after they stop.
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/games/search?q=${encodeURIComponent(query)}`,
-      );
-      const data = await response.json();
-      setResults(data);
-    } catch (error) {
-      console.error("Search error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/games/search?q=${encodeURIComponent(query)}`
+        );
+        const data = await response.json();
+        if (!cancelled) setResults(data);
+      } catch (error) {
+        if (!cancelled) console.error("Search error:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
 
   function getCoverUrl(game: Game): string {
     if (game.cover?.url) {
@@ -77,24 +89,22 @@ export default function SearchGameModal({
             </button>
           </div>
 
-          {/* Search Form */}
-          <form onSubmit={handleSearch} className="flex gap-2">
+          {/* Search Input */}
+          <div className="relative">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search for a game..."
-              className="flex-1 bg-gray-800 border border-gray-600 text-white placeholder-gray-400 px-4 py-2 rounded-lg focus:outline-none focus:border-[#b8253d]"
+              className="w-full bg-gray-800 border border-gray-600 text-white placeholder-gray-400 px-4 py-2 pr-10 rounded-lg focus:outline-none focus:border-[#b8253d]"
               autoFocus
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-[#b8253d] text-white px-6 py-2 rounded-lg hover:bg-[#8a1c2e] disabled:opacity-50 transition-colors"
-            >
-              {loading ? "Searching..." : "Search"}
-            </button>
-          </form>
+            {loading ? (
+              <i className="fa-solid fa-spinner animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            ) : (
+              <i className="fa-solid fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            )}
+          </div>
         </div>
 
         {/* Results */}
