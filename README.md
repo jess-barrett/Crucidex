@@ -1,17 +1,21 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="public/icon-dark.svg">
-  <img src="app/icon.svg" alt="Crucidex logo" width="100" align="left" hspace="20" />
-</picture>
-
-# Crucidex
-
-**Track your gaming history. Build your library. Connect with friends.**
+<table border="0">
+  <tr>
+    <td width="120" valign="middle">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="public/icon-dark.svg">
+        <img src="app/icon.svg" alt="Crucidex logo" width="100" />
+      </picture>
+    </td>
+    <td valign="middle">
+      <h1>Crucidex</h1>
+      <strong>Track your gaming history. Build your library. Connect with friends.</strong>
+    </td>
+  </tr>
+</table>
 
 A social platform for cataloging the games you've played, sharing reviews, and discovering new titles based on what players with similar taste enjoy.
 
 [Live Site](https://www.crucidex.com)
-
-<br clear="left" />
 
 ---
 
