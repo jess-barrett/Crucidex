@@ -1,6 +1,7 @@
-<div align="center">
-
-![Crucidex Hero](public/images/homepage/Crucidex-Hero.PNG)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/icon-dark.svg">
+  <img src="app/icon.svg" alt="Crucidex logo" width="100" align="left" hspace="20" />
+</picture>
 
 # Crucidex
 
@@ -10,7 +11,7 @@ A social platform for cataloging the games you've played, sharing reviews, and d
 
 [Live Site](https://www.crucidex.com)
 
-</div>
+<br clear="left" />
 
 ---
 
