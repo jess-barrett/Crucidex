@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import ReviewCard from "@/app/components/ReviewCard";
+import Skeleton from "@/app/components/Skeleton";
 import { useProfileLayout } from "@/lib/profile-layout-context";
 
 interface ActivityEntry {
@@ -97,7 +98,14 @@ export default function ActivityPage() {
       <hr className="border-gray-700 mt-2 mb-4" />
 
       {dataLoading ? (
-        <div className="py-12 text-center text-gray-500 text-sm">Loading...</div>
+        <div className="divide-y divide-gray-700/50">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-3 px-1">
+              <Skeleton className="h-4 w-3/5" />
+              <Skeleton className="h-3 w-12 ml-4" />
+            </div>
+          ))}
+        </div>
       ) : activity.length === 0 ? (
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-12 text-center">
           <i className="fa-solid fa-clock-rotate-left text-4xl text-gray-600 mb-4"></i>
@@ -142,7 +150,7 @@ export default function ActivityPage() {
                 <a
                   key={entry.id}
                   href={igdbId ? `/games/${igdbId}` : "#"}
-                  className="flex items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                  className="flex items-start sm:items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
                 >
                   <p className="text-sm text-gray-300">
                     <i className="fa-solid fa-plus text-[#b8253d] mr-2"></i>
@@ -161,7 +169,7 @@ export default function ActivityPage() {
                 <a
                   key={entry.id}
                   href={igdbId ? `/games/${igdbId}` : "#"}
-                  className="flex items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                  className="flex items-start sm:items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
                 >
                   <p className="text-sm text-gray-300">
                     <i className="fa-solid fa-bookmark text-[#b8253d] mr-2"></i>
@@ -177,7 +185,7 @@ export default function ActivityPage() {
                 <a
                   key={entry.id}
                   href={igdbId ? `/games/${igdbId}` : "#"}
-                  className="flex items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                  className="flex items-start sm:items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
                 >
                   <p className="text-sm text-gray-300">
                     <i className="fa-solid fa-star text-[#b8253d] mr-2"></i>
@@ -193,7 +201,7 @@ export default function ActivityPage() {
                 <a
                   key={entry.id}
                   href={igdbId ? `/games/${igdbId}` : "#"}
-                  className="flex items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                  className="flex items-start sm:items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
                 >
                   <p className="text-sm text-gray-300">
                     <i className="fa-solid fa-star text-[#b8253d] mr-2"></i>
@@ -209,7 +217,7 @@ export default function ActivityPage() {
                 <a
                   key={entry.id}
                   href={igdbId ? `/games/${igdbId}` : "#"}
-                  className="flex items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                  className="flex items-start sm:items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
                 >
                   <p className="text-sm text-gray-300">
                     <i className="fa-regular fa-star text-gray-400 mr-2"></i>
@@ -225,7 +233,7 @@ export default function ActivityPage() {
                 <a
                   key={entry.id}
                   href={igdbId ? `/games/${igdbId}` : "#"}
-                  className="flex items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                  className="flex items-start sm:items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
                 >
                   <p className="text-sm text-gray-300">
                     <i className="fa-solid fa-arrow-right-arrow-left text-blue-400 mr-2"></i>
@@ -242,7 +250,7 @@ export default function ActivityPage() {
                 <a
                   key={entry.id}
                   href={igdbId ? `/games/${igdbId}` : "#"}
-                  className="flex items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
+                  className="flex items-start sm:items-center justify-between py-3 px-1 hover:bg-gray-800/30 transition-colors"
                 >
                   <p className="text-sm text-gray-300">
                     <i className="fa-solid fa-gamepad text-green-400 mr-2"></i>

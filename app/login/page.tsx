@@ -54,7 +54,7 @@ export default function Login() {
 
   return (
     <main className="min-h-screen flex items-center justify-center">
-      <form onSubmit={handleLogin} className="flex flex-col gap-4 w-80">
+      <form onSubmit={handleLogin} className="flex flex-col gap-4 w-full max-w-sm px-4">
         <h1 className="text-2xl font-bold text-center">Log In to Crucidex</h1>
 
         <input
@@ -63,7 +63,7 @@ export default function Login() {
           value={emailOrUsername}
           onChange={(e) => setEmailOrUsername(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border border-gray-600 bg-gray-800 text-white placeholder-gray-400 px-3 py-2.5 rounded focus:outline-none focus:border-[#b8253d]"
         />
 
         <input
@@ -72,7 +72,7 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border border-gray-600 bg-gray-800 text-white placeholder-gray-400 px-3 py-2.5 rounded focus:outline-none focus:border-[#b8253d]"
         />
 
         {error && <p className="text-red-500 text-sm">{error}</p>}

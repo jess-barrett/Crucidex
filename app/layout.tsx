@@ -1,13 +1,37 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ConditionalHeader from "./components/ConditionalHeader";
 
 const inter = Inter({ subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0a0a0a",
+};
+
 export const metadata: Metadata = {
   title: "Crucidex",
-  description: "Track your gaming history",
+  description:
+    "Track your gaming history, share reviews, follow friends, and discover new games.",
+  applicationName: "Crucidex",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Crucidex",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    title: "Crucidex",
+    description:
+      "Track your gaming history, share reviews, follow friends, and discover new games.",
+    siteName: "Crucidex",
+  },
   icons: {
     icon: [
       { url: "/icon.svg", media: "(prefers-color-scheme: light)", type: "image/svg+xml" },

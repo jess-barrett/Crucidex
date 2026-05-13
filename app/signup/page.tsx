@@ -158,7 +158,7 @@ export default function SignUp() {
   // ── Form ──
   return (
     <main className="min-h-screen flex items-center justify-center">
-      <form onSubmit={handleSignUp} className="flex flex-col gap-4 w-80">
+      <form onSubmit={handleSignUp} className="flex flex-col gap-4 w-full max-w-sm px-4">
         <h1 className="text-2xl font-bold text-center">Sign Up for Crucidex</h1>
 
         <input
@@ -167,7 +167,7 @@ export default function SignUp() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border border-gray-600 bg-gray-800 text-white placeholder-gray-400 px-3 py-2.5 rounded focus:outline-none focus:border-[#b8253d]"
         />
 
         <input
@@ -177,7 +177,7 @@ export default function SignUp() {
           onChange={(e) => setPassword(e.target.value)}
           required
           minLength={6}
-          className="border p-2 rounded"
+          className="border border-gray-600 bg-gray-800 text-white placeholder-gray-400 px-3 py-2.5 rounded focus:outline-none focus:border-[#b8253d]"
         />
 
         <input
@@ -188,7 +188,7 @@ export default function SignUp() {
           required
           pattern="^[a-z0-9_-]+$"
           title="Lowercase letters, numbers, underscores, and hyphens only"
-          className="border p-2 rounded"
+          className="border border-gray-600 bg-gray-800 text-white placeholder-gray-400 px-3 py-2.5 rounded focus:outline-none focus:border-[#b8253d]"
         />
 
         <input
@@ -197,7 +197,7 @@ export default function SignUp() {
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           required
-          className="border p-2 rounded"
+          className="border border-gray-600 bg-gray-800 text-white placeholder-gray-400 px-3 py-2.5 rounded focus:outline-none focus:border-[#b8253d]"
         />
 
         {error && <p className="text-red-500 text-sm">{error}</p>}

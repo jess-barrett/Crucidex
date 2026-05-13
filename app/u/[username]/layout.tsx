@@ -50,7 +50,7 @@ function LayoutContent({
     <main className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* ── Row 1: User Info + Stats ── */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-20 h-20 bg-gradient-to-br from-[#b8253d] to-[#8a1c2e] rounded-full flex items-center justify-center text-2xl overflow-hidden flex-shrink-0 ring-2 ring-[#b8253d]/30">
               {profile.avatar_url ? (
@@ -113,7 +113,7 @@ function LayoutContent({
             </div>
           </div>
 
-          <div className="flex items-center gap-8">
+          <div className="flex items-center justify-around sm:justify-end gap-6 sm:gap-8">
             {[
               { value: gameCount, label: "Games" },
               { value: totalHours, label: "Hours" },

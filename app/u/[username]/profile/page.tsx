@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase-client";
 import Link from "next/link";
 import ReviewCard from "@/app/components/ReviewCard";
 import SelectGameModal from "@/app/components/SelectGameModal";
+import Skeleton from "@/app/components/Skeleton";
 import { useProfileLayout } from "@/lib/profile-layout-context";
 import type { UserGame } from "@/lib/types";
 
@@ -191,7 +192,51 @@ export default function ProfilePage() {
 
   if (dataLoading) {
     return (
-      <div className="py-12 text-center text-gray-500 text-sm">Loading...</div>
+      <>
+        {/* Favorite Games skeleton */}
+        <section>
+          <h2 className="text-lg font-semibold text-white">Favorite Games</h2>
+          <hr className="border-gray-700 mt-2 mb-4" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
+            ))}
+          </div>
+        </section>
+
+        {/* Recent Activity skeleton */}
+        <section>
+          <h2 className="text-lg font-semibold text-white">Recent Activity</h2>
+          <hr className="border-gray-700 mt-2 mb-4" />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between py-3 px-1">
+                <Skeleton className="h-4 w-3/5" />
+                <Skeleton className="h-3 w-12 ml-4" />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Recent Reviews skeleton */}
+        <section>
+          <h2 className="text-lg font-semibold text-white">Recent Reviews</h2>
+          <hr className="border-gray-700 mt-2 mb-4" />
+          <div className="divide-y divide-gray-700/50">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="flex gap-3 sm:gap-4 py-4">
+                <Skeleton className="flex-shrink-0 w-16 h-24 sm:w-20 sm:h-28 rounded-md" />
+                <div className="flex-1 min-w-0 space-y-2 pt-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </>
     );
   }
 
@@ -206,7 +251,7 @@ export default function ProfilePage() {
       <section>
         <h2 className="text-lg font-semibold text-white">Favorite Games</h2>
         <hr className="border-gray-700 mt-2 mb-4" />
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((position) => {
             const game = topFour.find(
               (g) => g.top_four_position === position
@@ -239,7 +284,7 @@ export default function ProfilePage() {
                     {isOwnProfile && (
                       <button
                         onClick={() => handleRemoveTopFour(game.id)}
-                        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 bg-[#b8253d] hover:bg-[#8a1c2e] text-white rounded-full w-6 h-6 flex items-center justify-center transition-all"
+                        className="absolute top-2 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 bg-[#b8253d] hover:bg-[#8a1c2e] text-white rounded-full w-9 h-9 md:w-6 md:h-6 flex items-center justify-center transition-all"
                         title="Remove from Favorites"
                       >
                         <i className="fa-solid fa-xmark text-xs"></i>

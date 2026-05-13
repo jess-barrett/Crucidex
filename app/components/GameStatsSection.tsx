@@ -8,7 +8,7 @@ export default function GameStatsSection({ stats }: GameStatsSectionProps) {
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       {/* Statistics Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatCard
           icon="fa-solid fa-play"
           label="Total Plays"

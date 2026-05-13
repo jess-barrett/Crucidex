@@ -33,11 +33,11 @@ export default function ReviewCard({ review }: ReviewCardProps) {
   }
 
   return (
-    <div className="flex gap-4 py-4 border-b border-gray-700/50 last:border-b-0">
+    <div className="flex gap-3 sm:gap-4 py-4 border-b border-gray-700/50 last:border-b-0">
       {/* Cover Art */}
       <a
         href={`/games/${review.game.igdb_id}`}
-        className="flex-shrink-0 w-20 h-28 rounded-md overflow-hidden"
+        className="flex-shrink-0 w-16 h-24 sm:w-20 sm:h-28 rounded-md overflow-hidden"
       >
         {review.game.cover_url ? (
           <img

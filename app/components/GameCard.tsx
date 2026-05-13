@@ -54,7 +54,7 @@ export default function GameCard({
   return (
     <div className="border border-gray-700 rounded-lg overflow-hidden bg-gray-900 relative group transition-all hover:border-[#b8253d]">
       {isOwnProfile && (
-        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           <GameCardMenu onEdit={onEdit} onDelete={onDelete} />
         </div>
       )}

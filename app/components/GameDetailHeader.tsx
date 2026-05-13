@@ -38,7 +38,7 @@ export default function GameDetailHeader({
       {/* Cover Art */}
       <div className="flex justify-center lg:justify-start">
         {coverUrl ? (
-          <div className="relative w-full max-w-[300px] aspect-[3/4] bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
+          <div className="relative w-full max-w-[200px] sm:max-w-[300px] aspect-[3/4] bg-gray-800 rounded-xl overflow-hidden shadow-2xl">
             <Image
               src={`https:${coverUrl}`}
               alt={igdbGame.name}
@@ -48,7 +48,7 @@ export default function GameDetailHeader({
             />
           </div>
         ) : (
-          <div className="w-full max-w-[300px] aspect-[3/4] bg-gray-700 rounded-xl flex items-center justify-center">
+          <div className="w-full max-w-[200px] sm:max-w-[300px] aspect-[3/4] bg-gray-700 rounded-xl flex items-center justify-center">
             <span className="text-gray-400 text-center p-4">
               No cover available
             </span>
@@ -60,7 +60,7 @@ export default function GameDetailHeader({
       <div className="space-y-6">
         {/* Title and Metadata */}
         <div>
-          <h1 className="text-5xl font-bold text-white mb-3">
+          <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">
             {igdbGame.name}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-lg text-gray-300">

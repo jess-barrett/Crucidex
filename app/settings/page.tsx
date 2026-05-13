@@ -389,7 +389,7 @@ function SettingsContent() {
   }
 
   return (
-    <main className="min-h-screen p-8 max-w-2xl mx-auto">
+    <main className="min-h-screen p-4 sm:p-8 max-w-2xl mx-auto">
       <button
         onClick={() => router.back()}
         className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-4"
@@ -408,7 +408,7 @@ function SettingsContent() {
       {/* Profile Information */}
       <form
         onSubmit={handleSaveProfile}
-        className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6"
+        className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 sm:p-6 mb-6"
       >
         <h2 className="text-xl font-semibold text-white mb-4">Profile Information</h2>
 
@@ -523,7 +523,7 @@ function SettingsContent() {
       </form>
 
       {/* Account Settings */}
-      <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6">
+      <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 sm:p-6 mb-6">
         <h2 className="text-xl font-semibold text-white mb-4">Account Settings</h2>
 
         {/* Email (read-only for now) */}
@@ -585,7 +585,7 @@ function SettingsContent() {
       {/* Steam Integration */}
       <div
         id="steam-integration"
-        className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-6 scroll-mt-20"
+        className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 sm:p-6 mb-6 scroll-mt-20"
       >
         <h2 className="text-xl font-semibold text-white mb-4">Steam Integration</h2>
 

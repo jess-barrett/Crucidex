@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-client";
+import Skeleton from "@/app/components/Skeleton";
 import { useProfileLayout } from "@/lib/profile-layout-context";
 
 interface WishlistGame {
@@ -53,14 +54,18 @@ export default function WishlistPage() {
       <hr className="border-gray-700 mt-2 mb-4" />
 
       {dataLoading ? (
-        <div className="py-12 text-center text-gray-500 text-sm">Loading...</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+          {Array.from({ length: 14 }).map((_, i) => (
+            <Skeleton key={i} className="aspect-[3/4] rounded-lg" />
+          ))}
+        </div>
       ) : wishlist.length === 0 ? (
         <div className="py-12 text-center">
           <i className="fa-solid fa-bookmark text-4xl text-gray-600 mb-4"></i>
           <p className="text-gray-400">No wishlisted games yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3">
           {wishlist.map((item) => (
             <a
               key={item.id}

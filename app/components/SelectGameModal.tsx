@@ -25,7 +25,7 @@ export default function SelectGameModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-xl font-bold text-white">
               Select Game for Position {position}
@@ -86,7 +86,7 @@ export default function SelectGameModal({
           )}
         </div>
 
-        <div className="border-t border-gray-700 px-6 py-4 flex justify-end">
+        <div className="border-t border-gray-700 px-4 sm:px-6 py-4 flex justify-end">
           <button
             type="button"
             onClick={onClose}

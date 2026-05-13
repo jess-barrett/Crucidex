@@ -145,7 +145,7 @@ export default function TrendingGamesSection() {
                   handleDismiss(rec.igdb_id);
                 }}
                 disabled={dismissingId === rec.igdb_id}
-                className="group/dismiss absolute top-2 right-2 z-10 h-7 bg-black/70 hover:bg-[#b8253d] text-white rounded-full flex items-center opacity-0 group-hover:opacity-100 transition-all disabled:opacity-100 overflow-hidden pl-2 pr-2"
+                className="group/dismiss absolute top-2 right-2 z-10 h-10 md:h-7 bg-black/70 hover:bg-[#b8253d] text-white rounded-full flex items-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all disabled:opacity-100 overflow-hidden px-3 md:px-2"
                 title="Not interested"
               >
                 {dismissingId === rec.igdb_id ? (

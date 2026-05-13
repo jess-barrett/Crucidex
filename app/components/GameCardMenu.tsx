@@ -31,7 +31,7 @@ export default function GameCardMenu({ onEdit, onDelete }: GameCardMenuProps) {
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className="text-white bg-black/50 hover:bg-black/70 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+        className="text-white bg-black/50 hover:bg-black/70 rounded-full w-10 h-10 sm:w-8 sm:h-8 flex items-center justify-center transition-colors"
         title="Options"
       >
         <span className="text-xl leading-none">⋮</span>

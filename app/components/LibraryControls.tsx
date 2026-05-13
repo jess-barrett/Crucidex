@@ -132,7 +132,7 @@ export default function LibraryControls({
                   onClick={() =>
                     onHoursFilterChange(option.value as HoursFilter)
                   }
-                  className={`px-3 py-1 rounded text-sm transition-colors ${
+                  className={`px-3 py-2 sm:py-1 rounded text-sm transition-colors ${
                     hoursFilter === option.value
                       ? "bg-[#b8253d] text-white"
                       : "bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600"
@@ -183,7 +183,7 @@ export default function LibraryControls({
                 <button
                   key={option.value}
                   onClick={() => onModeFilterChange(option.value as ModeFilter)}
-                  className={`px-3 py-1 rounded text-sm transition-colors ${
+                  className={`px-3 py-2 sm:py-1 rounded text-sm transition-colors ${
                     modeFilter === option.value
                       ? "bg-[#b8253d] text-white"
                       : "bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600"
@@ -217,7 +217,7 @@ export default function LibraryControls({
                   onClick={() =>
                     onPlayStatusFilterChange(option.value as PlayStatusFilter)
                   }
-                  className={`px-3 py-1 rounded text-sm transition-colors ${
+                  className={`px-3 py-2 sm:py-1 rounded text-sm transition-colors ${
                     playStatusFilter === option.value
                       ? "bg-[#b8253d] text-white"
                       : "bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600"

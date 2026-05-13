@@ -34,7 +34,7 @@ export default function ProfileNavBar({ username }: ProfileNavBarProps) {
   }
 
   return (
-    <nav className="border border-gray-700 rounded-lg">
+    <nav className="border border-gray-700 rounded-lg overflow-x-auto">
       <div className="flex">
         {TABS.map((tab) => {
           const active = isActive(tab.path);
@@ -42,7 +42,7 @@ export default function ProfileNavBar({ username }: ProfileNavBarProps) {
             <Link
               key={tab.label}
               href={getHref(tab.path)}
-              className={`flex-1 text-center py-3 text-sm font-medium transition-colors relative ${
+              className={`flex-shrink-0 min-w-[100px] md:flex-1 md:min-w-0 text-center py-3 text-sm font-medium transition-colors relative ${
                 active
                   ? "text-[#b8253d]"
                   : "text-gray-400 hover:text-white"

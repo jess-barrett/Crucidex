@@ -148,7 +148,7 @@ export default function EditGameModal({ game, userId, onSave, onClose }: EditGam
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-gray-900 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-2xl font-bold text-white">Edit Game</h2>
               <button
@@ -305,7 +305,7 @@ export default function EditGameModal({ game, userId, onSave, onClose }: EditGam
             {error && <p className="text-red-500 text-sm mt-4">{error}</p>}
           </div>
 
-          <div className="border-t border-gray-700 px-6 py-4 flex justify-end gap-2">
+          <div className="border-t border-gray-700 px-4 sm:px-6 py-4 flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}

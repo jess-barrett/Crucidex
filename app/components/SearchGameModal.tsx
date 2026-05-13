@@ -78,7 +78,7 @@ export default function SearchGameModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-gray-700">
+        <div className="p-4 sm:p-6 border-b border-gray-700">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-2xl font-bold text-white">Add A Game</h2>
             <button
@@ -108,7 +108,7 @@ export default function SearchGameModal({
         </div>
 
         {/* Results */}
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
           {results.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               {loading

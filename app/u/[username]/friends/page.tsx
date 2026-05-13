@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-client";
+import Skeleton from "@/app/components/Skeleton";
 import { useProfileLayout } from "@/lib/profile-layout-context";
 
 interface Friend {
@@ -200,7 +201,17 @@ export default function FriendsPage() {
       </div>
 
       {dataLoading && (
-        <div className="py-12 text-center text-gray-500 text-sm">Loading...</div>
+        <div className="divide-y divide-gray-700/50">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center py-3 px-1 gap-3">
+              <Skeleton className="w-10 h-10 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* ── Tab: Friends ── */}
@@ -223,7 +234,8 @@ export default function FriendsPage() {
             </div>
           ) : (
             <>
-              <div className="flex items-center px-1 pb-2 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-700/50">
+              {/* Column headers — hidden on mobile */}
+              <div className="hidden md:flex items-center px-1 pb-2 text-xs text-gray-500 uppercase tracking-wide border-b border-gray-700/50">
                 <span className="flex-1">Name</span>
                 <span className="w-20 text-center">Games</span>
                 <span className="w-20 text-center">Hours</span>
@@ -255,7 +267,7 @@ export default function FriendsPage() {
                     </a>
 
                     <div className="ml-3 flex-1 min-w-0">
-                      <div className="flex items-baseline gap-2">
+                      <div className="flex items-baseline gap-2 flex-wrap">
                         <a
                           href={`/u/${f.friend.username}`}
                           className="text-white font-medium text-sm hover:text-[#b8253d] transition-colors"
@@ -266,23 +278,31 @@ export default function FriendsPage() {
                           {f.friend.display_name}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500">
+
+                      {/* Mobile-only inline stats summary */}
+                      <p className="text-sm text-gray-500 mt-0.5 md:hidden">
+                        {f.stats?.games || 0} games &middot; {f.stats?.hours || 0} hrs &middot; {f.stats?.friends || 0} friends
+                      </p>
+
+                      {/* Desktop-only "X friends" subtitle */}
+                      <p className="hidden md:block text-xs text-gray-500">
                         {f.stats?.friends || 0} friends
                       </p>
                     </div>
 
-                    <span className="w-20 text-center text-sm text-gray-300">
+                    {/* Desktop-only stat columns */}
+                    <span className="hidden md:inline-block w-20 text-center text-sm text-gray-300">
                       {f.stats?.games || 0}
                     </span>
-                    <span className="w-20 text-center text-sm text-gray-300">
+                    <span className="hidden md:inline-block w-20 text-center text-sm text-gray-300">
                       {f.stats?.hours || 0}
                     </span>
-                    <span className="w-20 text-center text-sm text-gray-300">
+                    <span className="hidden md:inline-block w-20 text-center text-sm text-gray-300">
                       {f.stats?.friends || 0}
                     </span>
 
                     {isOwnProfile && (
-                      <div className="w-24 flex justify-end">
+                      <div className="md:w-24 flex justify-end ml-2 md:ml-0">
                         <button
                           onClick={() => handleUnfriend(f.friendshipId)}
                           disabled={actionLoading === f.friendshipId}

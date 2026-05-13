@@ -14,6 +14,7 @@ import ConfirmDeleteModal from "@/app/components/ConfirmDeleteModal";
 import SearchGameModal from "@/app/components/SearchGameModal";
 import AddGameModal from "@/app/components/AddGameModal";
 import Toast from "@/app/components/Toast";
+import Skeleton from "@/app/components/Skeleton";
 import { useProfileLayout } from "@/lib/profile-layout-context";
 import type { UserGame, Genre } from "@/lib/types";
 
@@ -188,7 +189,17 @@ export default function LibraryPage() {
   return (
     <>
       {dataLoading ? (
-        <div className="py-12 text-center text-gray-500 text-sm">Loading...</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="border border-gray-700 rounded-lg overflow-hidden bg-gray-900">
+              <Skeleton className="aspect-[3/4] rounded-none" />
+              <div className="p-3 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <>
           {/* ── Library Controls ── */}

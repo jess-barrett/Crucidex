@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase-client";
 import ReviewCard from "@/app/components/ReviewCard";
+import Skeleton from "@/app/components/Skeleton";
 import { useProfileLayout } from "@/lib/profile-layout-context";
 
 interface Review {
@@ -80,7 +81,20 @@ export default function ReviewsPage() {
       <hr className="border-gray-700 mt-2 mb-2" />
 
       {dataLoading ? (
-        <div className="py-12 text-center text-gray-500 text-sm">Loading...</div>
+        <div className="divide-y divide-gray-700/50">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex gap-3 sm:gap-4 py-4">
+              <Skeleton className="flex-shrink-0 w-16 h-24 sm:w-20 sm:h-28 rounded-md" />
+              <div className="flex-1 min-w-0 space-y-2 pt-1">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-5/6" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : reviews.length === 0 ? (
         <div className="py-12 text-center">
           <i className="fa-solid fa-star text-4xl text-gray-600 mb-4"></i>

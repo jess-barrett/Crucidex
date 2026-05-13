@@ -42,8 +42,10 @@ export default function Header() {
   const [userResults, setUserResults] = useState<{ id: string; username: string; display_name: string; avatar_url: string | null }[]>([]);
   const [userSearching, setUserSearching] = useState(false);
   const [showUserResults, setShowUserResults] = useState(false);
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const userSearchRef = useRef<HTMLDivElement>(null);
+  const navMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -120,6 +122,12 @@ export default function Header() {
         !userSearchRef.current.contains(event.target as Node)
       ) {
         setShowUserResults(false);
+      }
+      if (
+        navMenuRef.current &&
+        !navMenuRef.current.contains(event.target as Node)
+      ) {
+        setNavMenuOpen(false);
       }
     }
 
@@ -214,14 +222,14 @@ export default function Header() {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         <a
           href="/"
-          className="text-4xl font-bold text-white hover:text-[#b8253d] transition-colors flex-shrink-0"
+          className="text-3xl md:text-4xl font-bold text-white hover:text-[#b8253d] transition-colors flex-shrink-0"
         >
           Crucidex
         </a>
 
-        {/* Search Bar (only shown when logged in) */}
+        {/* Search Bar (only shown when logged in, hidden on mobile) */}
         {user && (
-          <div ref={searchRef} className="relative flex-1 max-w-md">
+          <div ref={searchRef} className="relative flex-1 max-w-md hidden md:block">
             <div className="relative">
               <input
                 type="text"
@@ -286,8 +294,18 @@ export default function Header() {
         <div className="flex items-center gap-3 flex-shrink-0">
           {user ? (
             <>
-              {/* User Search — icon expands to search bar on hover */}
-              <div ref={userSearchRef} className="relative group/user flex items-center">
+              {/* Mobile-only game search trigger */}
+              <button
+                onClick={() => setShowSearchModal(true)}
+                className="md:hidden flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg h-9 w-9"
+                title="Search games"
+                aria-label="Search games"
+              >
+                <i className="fa-solid fa-search text-sm"></i>
+              </button>
+
+              {/* User Search — icon expands to search bar on hover (desktop only) */}
+              <div ref={userSearchRef} className="relative group/user hidden md:flex items-center">
                 <div className="flex items-center bg-gray-700 hover:bg-gray-600 rounded-lg h-9 px-2.5 transition-all duration-300 overflow-hidden">
                   <i className="fa-solid fa-user-plus text-sm text-gray-300 flex-shrink-0"></i>
                   <input
@@ -357,89 +375,110 @@ export default function Header() {
                 </span>
               </button>
 
-              {/* Username Dropdown */}
-              <div className="relative group/nav">
-                <button className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors py-2">
-                  <span className="text-sm font-medium">{username || "Menu"}</span>
-                  <i className="fa-solid fa-chevron-down text-[10px] transition-transform group-hover/nav:rotate-180"></i>
+              {/* Username Dropdown — click-toggle on all screen sizes */}
+              <div className="relative" ref={navMenuRef}>
+                <button
+                  onClick={() => setNavMenuOpen((v) => !v)}
+                  className="flex items-center gap-1.5 text-gray-300 hover:text-white transition-colors py-2 h-9"
+                  aria-expanded={navMenuOpen}
+                  aria-haspopup="menu"
+                >
+                  {/* Mobile: hamburger icon only */}
+                  <i className="fa-solid fa-bars text-lg md:hidden"></i>
+                  {/* Desktop: username + chevron */}
+                  <span className="hidden md:inline text-sm font-medium">{username || "Menu"}</span>
+                  <i className={`fa-solid fa-chevron-down text-[10px] transition-transform hidden md:inline ${navMenuOpen ? "rotate-180" : ""}`}></i>
                 </button>
 
                 {/* Dropdown Menu */}
-                <div className="absolute right-0 top-full pt-1 opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all duration-200 z-50">
-                  <div className="bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl w-48 py-1 overflow-hidden">
-                    <a
-                      href="/"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-house w-4 text-center text-xs"></i>
-                      Home
-                    </a>
-                    <a
-                      href={username ? `/u/${username}/profile` : "/profile"}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-user w-4 text-center text-xs"></i>
-                      Profile
-                    </a>
-                    <a
-                      href={username ? `/u/${username}/library` : "/profile"}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-gamepad w-4 text-center text-xs"></i>
-                      Library
-                    </a>
-                    <a
-                      href={username ? `/u/${username}/activity` : "#"}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-clock-rotate-left w-4 text-center text-xs"></i>
-                      Activity
-                    </a>
-                    <a
-                      href={username ? `/u/${username}/friends` : "#"}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-user-group w-4 text-center text-xs"></i>
-                      Friends
-                      {pendingCount > 0 && (
-                        <span className="bg-[#b8253d] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ml-auto">
-                          {pendingCount}
-                        </span>
-                      )}
-                    </a>
-                    <a
-                      href={username ? `/u/${username}/reviews` : "#"}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-star w-4 text-center text-xs"></i>
-                      Reviews
-                    </a>
-                    <a
-                      href={username ? `/u/${username}/wishlist` : "#"}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-bookmark w-4 text-center text-xs"></i>
-                      Wishlist
-                    </a>
+                {navMenuOpen && (
+                  <div className="absolute right-0 top-full pt-1 z-50">
+                    <div className="bg-gray-800/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl w-56 py-1 overflow-hidden">
+                      <a
+                        href="/"
+                        onClick={() => setNavMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-house w-4 text-center text-xs"></i>
+                        Home
+                      </a>
+                      <a
+                        href={username ? `/u/${username}/profile` : "/profile"}
+                        onClick={() => setNavMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-user w-4 text-center text-xs"></i>
+                        Profile
+                      </a>
+                      <a
+                        href={username ? `/u/${username}/library` : "/profile"}
+                        onClick={() => setNavMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-gamepad w-4 text-center text-xs"></i>
+                        Library
+                      </a>
+                      <a
+                        href={username ? `/u/${username}/activity` : "#"}
+                        onClick={() => setNavMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-clock-rotate-left w-4 text-center text-xs"></i>
+                        Activity
+                      </a>
+                      <a
+                        href={username ? `/u/${username}/friends` : "#"}
+                        onClick={() => setNavMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-user-group w-4 text-center text-xs"></i>
+                        Friends
+                        {pendingCount > 0 && (
+                          <span className="bg-[#b8253d] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center ml-auto">
+                            {pendingCount}
+                          </span>
+                        )}
+                      </a>
+                      <a
+                        href={username ? `/u/${username}/reviews` : "#"}
+                        onClick={() => setNavMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-star w-4 text-center text-xs"></i>
+                        Reviews
+                      </a>
+                      <a
+                        href={username ? `/u/${username}/wishlist` : "#"}
+                        onClick={() => setNavMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-bookmark w-4 text-center text-xs"></i>
+                        Wishlist
+                      </a>
 
-                    <div className="border-t border-gray-700 my-1"></div>
+                      <div className="border-t border-gray-700 my-1"></div>
 
-                    <a
-                      href="/settings"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-gear w-4 text-center text-xs"></i>
-                      Settings
-                    </a>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 hover:bg-gray-700/50 hover:text-white transition-colors"
-                    >
-                      <i className="fa-solid fa-right-from-bracket w-4 text-center text-xs"></i>
-                      Log Out
-                    </button>
+                      <a
+                        href="/settings"
+                        onClick={() => setNavMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-gear w-4 text-center text-xs"></i>
+                        Settings
+                      </a>
+                      <button
+                        onClick={() => {
+                          setNavMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-400 hover:bg-gray-700/50 hover:text-white transition-colors"
+                      >
+                        <i className="fa-solid fa-right-from-bracket w-4 text-center text-xs"></i>
+                        Log Out
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </>
           ) : (

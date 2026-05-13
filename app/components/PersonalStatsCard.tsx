@@ -125,7 +125,7 @@ export default function PersonalStatsCard({
       <h2 className="text-2xl font-bold text-white mb-6">Your Stats</h2>
 
       {/* Stats Grid - 2 rows x 4 columns */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {statItems.map((stat) => {
           const valueStr = String(stat.value);
           // Scale font down for long text (e.g. long genre names)

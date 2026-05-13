@@ -28,7 +28,7 @@ export default function MarketingPage() {
       </nav>
 
       {/* Hero Section with Fade */}
-      <section className="relative h-[400px] bg-gradient-to-b from-gray-800 to-background overflow-hidden">
+      <section className="relative h-[250px] sm:h-[400px] bg-gradient-to-b from-gray-800 to-background overflow-hidden">
         <img
           src="/images/homepage/Crucidex-Hero.PNG"
           alt="Crucidex Hero"
@@ -41,13 +41,13 @@ export default function MarketingPage() {
       </section>
 
       {/* Main Content Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10">
-        <h1 className="text-8xl font-bold text-white mb-4">Crucidex</h1>
-        <p className="text-2xl text-gray-300 mb-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-24 relative z-10">
+        <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold text-white mb-4">Crucidex</h1>
+        <p className="text-lg sm:text-2xl text-gray-300 mb-8">
           Explore, share, and index your games
         </p>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <Link
             href="/signup"
             className="bg-[#b8253d] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#8a1c2e] transition-colors"
@@ -63,7 +63,7 @@ export default function MarketingPage() {
 
       {/* What is Crucidex Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-4xl font-bold text-white mb-6">
+        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
           What is Crucidex?
         </h2>
         <p className="text-xl text-gray-300 leading-relaxed">
@@ -76,16 +76,16 @@ export default function MarketingPage() {
       </section>
 
       {/* Feature Sections */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12 sm:space-y-24">
         {/* Feature 1: Index Your Collection - Image Left */}
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
           <img
             src="/images/homepage/Crucidex-Library.PNG"
             alt="Index Your Collection"
             className="rounded-2xl w-full shadow-2xl"
           />
           <div>
-            <h3 className="text-3xl font-bold text-white mb-4">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
               Index Your Personal Game Collection
             </h3>
             <p className="text-lg text-gray-300 leading-relaxed">
@@ -98,9 +98,9 @@ export default function MarketingPage() {
         </div>
 
         {/* Feature 2: Share Reviews - Text Left, Image Right */}
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
           <div className="order-2 md:order-1">
-            <h3 className="text-3xl font-bold text-white mb-4">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
               Share Your Experience With Reviews
             </h3>
             <p className="text-lg text-gray-300 leading-relaxed">
@@ -117,14 +117,14 @@ export default function MarketingPage() {
         </div>
 
         {/* Feature 3: Stay Connected - Image Left */}
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
           <img
             src="/images/homepage/Crucidex-Friends.PNG"
             alt="Stay Connected with Friends"
             className="rounded-2xl w-full shadow-2xl"
           />
           <div>
-            <h3 className="text-3xl font-bold text-white mb-4">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
               Stay Caught Up With Your Friends
             </h3>
             <p className="text-lg text-gray-300 leading-relaxed">
@@ -136,9 +136,9 @@ export default function MarketingPage() {
         </div>
 
         {/* Feature 4: Recommendations - Text Left, Image Right */}
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-12 items-center">
           <div className="order-2 md:order-1">
-            <h3 className="text-3xl font-bold text-white mb-4">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
               Receive Recommendations Based On Your Taste
             </h3>
             <p className="text-lg text-gray-300 leading-relaxed">
@@ -158,7 +158,7 @@ export default function MarketingPage() {
 
       {/* Bottom CTA Section */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-        <h2 className="text-4xl font-bold text-white mb-6">
+        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
           Ready to start your gaming journey?
         </h2>
         <Link
